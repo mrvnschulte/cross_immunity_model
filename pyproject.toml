@@ -32,3 +32,4 @@ include = ["cross_immunity_model*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = "-v --cov=assignment_of_cases_to_variants --cov-report=term-missing"

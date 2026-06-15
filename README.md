@@ -100,7 +100,7 @@ sol = solve_ivp(
 )
 ```
 
-### Using Precomputed Matrices (Faster for Repeated Evaluations)
+### Using Precomputed Matrices (Faster)
 
 ```python
 from cross_immunity_model import construct_matrices, multi_variant_model_with_matrices
@@ -261,7 +261,7 @@ incidence = cumulative_cases_to_incidence(cumulative_cases, population, window=7
 | Function | Description |
 |----------|-------------|
 | `invasion_reproduction_number` | Two-variant invasion reproduction number |
-| `invasion_reproduction_number_multiple_variants` | Invasion R0 at a given equilibrium |
+| `invasion_reproduction_number_multiple_variants` | Invasion reproduction number at a given equilibrium |
 | `critical_sigma` | Critical cross-immunity for variant 1 to invade variant 2 |
 | `critical_r01` | Critical R0 of variant 1 for invasion |
 | `critical_r02` | Critical R0 of variant 2 for invasion |

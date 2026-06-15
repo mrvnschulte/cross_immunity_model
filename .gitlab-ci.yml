@@ -16,7 +16,7 @@ test:
   before_script:
     - pip install -e ".[dev]"
   script:
-    - pytest tests/ -v --tb=short --cov=cross_immunity_model --cov-report=xml --cov-report=term
+    - pytest tests/ -v --tb=short --junit-xml=report.xml --cov=cross_immunity_model --cov-report=xml --cov-report=term
   coverage: '/TOTAL.*\s+(\d+%)$/'
   artifacts:
     when: always
