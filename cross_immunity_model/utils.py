@@ -6,13 +6,12 @@ model, including:
     - hamming_weight_iterator
     - is_subset
     - number_of_variants
-    - random_simplex_points
     - subsets_of
     - variant_in_set
 """
 
-from collections.abc import Iterator
 from itertools import combinations
+import functools
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -62,27 +61,28 @@ def check_validity(x: ArrayLike) -> bool:
     return bool(np.all((0 <= x) & (x <= 1)))
 
 
-def hamming_weight_iterator(size: int) -> Iterator[int]:
+@functools.lru_cache(maxsize=None)
+def hamming_weight_iterator(size: int) -> tuple[int, ...]:
     """
-    Iterate over all integers in [0, size) ordered by ascending Hamming weight.
+    Return all integers in [0, size) ordered by ascending Hamming weight.
 
-    Within the same Hamming weight, numbers are yielded in ascending order.
+    Within the same Hamming weight, numbers are returned in ascending order.
 
     Parameters
     ----------
     size : int
         Upper bound (exclusive) of the integer range to iterate over.
 
-    Yields
-    ------
-    int
-        Next integer in [0, size), ordered by number of set bits (1s in
-        binary representation).
+    Returns
+    -------
+    result : tuple[int, ...]
+        Integers in [0, size), ordered by ascending number of set bits
+        (1s in binary representation).
 
     Examples
     --------
-    >>> list(hamming_weight_iterator(8))
-    [0, 1, 2, 4, 3, 5, 6, 7]
+    >>> hamming_weight_iterator(8)
+    (0, 1, 2, 4, 3, 5, 6, 7)
 
     The order corresponds to grouping by Hamming weight:
 
@@ -91,10 +91,12 @@ def hamming_weight_iterator(size: int) -> Iterator[int]:
     - weight 2: 3 (0b011), 5 (0b101), 6 (0b110)
     - weight 3: 7 (0b111)
     """
+    result = []
     for weight in range(size.bit_length()):
         for j in range(size):
             if bin(j).count("1") == weight:
-                yield j
+                result.append(j)
+    return tuple(result)
 
 
 def is_subset(i: int, j: int) -> bool:
@@ -139,34 +141,6 @@ def number_of_variants(x: ArrayLike, matrix_form: bool = False) -> int:
         base = 3
     n = int(round(np.log(len(x)) / np.log(base)))
     return n
-
-
-def random_simplex_points(
-    n: int, dim: int, rng: np.random.Generator | None = None
-) -> np.ndarray:
-    """
-    Generate random points on the standard simplex according to Dirichlet
-    distribution.
-
-    Parameters
-    ----------
-    n : int
-        Number of points to generate.
-    dim : int
-        Dimension of the state.
-    rng : np.random.Generator, optional
-        Random number generator. If None is given, it is initialized
-
-    Returns
-    -------
-    mats : np.ndarray
-        Array of n random points on the simplex.
-    """
-    if rng is None:
-        rng = np.random.default_rng()
-    alpha = np.ones(dim)
-    mats = rng.dirichlet(alpha, size=n)
-    return mats
 
 
 def subsets_of(indices: ArrayLike) -> list:

@@ -41,7 +41,7 @@ def invasion_reproduction_number_multiple_variants(
     beta: ArrayLike,
     gamma: ArrayLike,
     b: float,
-    V: np.ndarray | None,
+    V: np.ndarray | None = None,
 ) -> np.ndarray:
     """
     Returns the invasion reproduction number for all variants at given
@@ -57,7 +57,7 @@ def invasion_reproduction_number_multiple_variants(
         Vector of recovery rates of the variants.
     b : float
         Natural birth and death rate.
-    V : np.ndarray | None
+    V : np.ndarray | None, optional
         Variant-in-set matrix. If None is given, it is computed.
 
     Returns

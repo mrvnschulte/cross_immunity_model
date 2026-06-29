@@ -41,6 +41,7 @@ from .multi_variant_model import (
     multi_variant_model_for_loops,
     multi_variant_model_with_matrices,
 )
+from .random_parameters import sample_random_parameters, random_simplex_points
 from .symbolic_system import build_symbolic_system
 from .two_variant_equilibrium_equations import (
     endemic_equilibrium_equation,
@@ -58,7 +59,6 @@ from .utils import (
     check_validity,
     is_subset,
     number_of_variants,
-    random_simplex_points,
     variant_in_set,
 )
 
@@ -98,6 +98,7 @@ __all__ = [
     "protected_2",
     "random_simplex_points",
     "relative_to_absolute_cases",
+    "sample_random_parameters",
     "shift_matrix",
     "solve_multi_variant_equilibrium_equation",
     "susceptibles",

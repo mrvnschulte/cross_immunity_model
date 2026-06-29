@@ -86,11 +86,13 @@ def multi_variant_equilibrium_compartments(
     for j in iteration_list:
         if j == 0:
             continue
+        SIW = np.sum(S @ I_star @ W, axis=0)
         for i in reversed(iteration_list):
             if is_subset(i, j):
-                I_star[i, j] = (
-                    np.sum(S @ I_star @ W, axis=0)[i, j] + (G @ I_star)[i, j]
-                ) / (gamma_sum[i] + beta_sum[j] + b)
+                GI_ij = G[i, :] @ I_star[:, j]
+                I_star[i, j] = (SIW[i, j] + GI_ij) / (
+                    gamma_sum[i] + beta_sum[j] + b
+                )
 
     return I_star
 
@@ -177,6 +179,7 @@ def solve_multi_variant_equilibrium_equation(
     I_variant_guess: ArrayLike,
     free_indices: ArrayLike | None = None,
     bounds: tuple[ArrayLike, ArrayLike] = (0, 1),
+    atol: float = 1e-4,
     use_inv_formulation: bool = True,
 ) -> np.ndarray:
     """
@@ -208,6 +211,8 @@ def solve_multi_variant_equilibrium_equation(
         used. The default is None.
     bounds : tuple[ArrayLike, ArrayLike], optional
         Bounds on the equilibrium I_variant. The default is (0, 1).
+    atol : float, optional
+        Tolerance for least square solver. The default is 1e-4.
     use_inv_formulation : bool, optional
         If True, the equilibrium is computed by setting the invasion
         reproduction number of coexisting variants to 1. The default is True.
@@ -235,7 +240,16 @@ def solve_multi_variant_equilibrium_equation(
             )
         else:
             result = multi_variant_equilibrium_equation(
-                I_variant_full, beta, gamma, sigma, V, G, T, S, b
+                I_variant_full,
+                beta,
+                gamma,
+                sigma,
+                V,
+                G,
+                T,
+                S,
+                b,
+                use_inv_formulation=use_inv_formulation,
             )
             return reduce_variants(result, free_indices)
 
@@ -245,6 +259,9 @@ def solve_multi_variant_equilibrium_equation(
         multi_variant_equilibrium_equation_reduced,
         I_variant_guess,
         bounds=bounds,
+        ftol=atol,
+        # xtol=atol,
+        # gtol=atol,
     )
     I_variant = project_n_variants(res.x, n, free_indices)
 
@@ -263,6 +280,7 @@ def find_multi_variant_equilibrium(
     I_variant_guess: ArrayLike,
     free_indices: ArrayLike | None = None,
     bounds: tuple[ArrayLike, ArrayLike] = (0, 1),
+    atol: float = 1e-4,
     use_inv_formulation: bool = True,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
@@ -295,6 +313,8 @@ def find_multi_variant_equilibrium(
         used. The default is None.
     bounds : tuple[ArrayLike, ArrayLike], optional
         Bounds on the equilibrium I_variant. The default is (0, 1).
+    atol : float, optional
+        Tolerance for least square solver. The default is 1e-4.
     use_inv_formulation : bool, optional
         If True, the equilibrium is computed by setting the invasion
         reproduction number of coexisting variants to 1. The default is True.
@@ -324,6 +344,7 @@ def find_multi_variant_equilibrium(
             I_variant_guess,
             free_indices=free_indices,
             bounds=bounds,
+            atol=atol,
             use_inv_formulation=use_inv_formulation,
         )
     I_eq = multi_variant_equilibrium_compartments(
@@ -348,6 +369,7 @@ def check_stability_of_variants(
     atol: float = 1e-4,
     verbosity_level: int = 0,
     use_inv_formulation: bool = True,
+    _I_variant_prev: np.ndarray | None = None,
 ) -> tuple[list[int], np.ndarray, np.ndarray, int]:
     """
     Checks the stability of the equilibrium with coexisting variants, while
@@ -395,6 +417,12 @@ def check_stability_of_variants(
     use_inv_formulation : bool, optional
         If True, the equilibrium is computed by setting the invasion
         reproduction number of coexisting variants to 1. The default is True.
+    _I_variant_prev : np.ndarray | None, optional
+        Warm-start vector from the parent recursive call. The known entries
+        (coexisting variants from the previous level) are reused as the
+        initial guess, and the new candidate entry is initialised to a small
+        positive value. If None, the standard unit guess is used. Internal
+        parameter – not intended to be set by the caller.
 
     Returns
     -------
@@ -416,8 +444,12 @@ def check_stability_of_variants(
 
     # Find corresponding equilibrium and compute invasion reproduction number
     n_variants = len(beta)
-    I_variant_guess = np.zeros(n_variants)
-    I_variant_guess[coexisting_variants] = 1
+    if _I_variant_prev is not None:
+        I_variant_guess = _I_variant_prev.copy()
+    else:
+        I_variant_guess = np.zeros(n_variants)
+        I_variant_guess[coexisting_variants] = 0.1
+
     I_variant_eq, I_eq, x_eq = find_multi_variant_equilibrium(
         beta,
         gamma,
@@ -429,11 +461,13 @@ def check_stability_of_variants(
         b,
         I_variant_guess,
         free_indices=coexisting_variants,
+        atol=atol,
         use_inv_formulation=use_inv_formulation,
     )
     inv_r0 = invasion_reproduction_number_multiple_variants(
         x_eq, beta, gamma, b, V
     )
+
     if verbosity_level >= 3:
         print(
             f"Checking stability of equilibrium with variants: {coexisting_variants}"
@@ -482,6 +516,10 @@ def check_stability_of_variants(
         new_coexisting_variants = coexisting_variants + [candidate]
         new_coexisting_variants.sort()
         new_candidate_variants = candidate_variants[i + 1 :]
+
+        warm_start = I_variant_eq.copy()
+        warm_start[candidate] = 0.1
+
         stable_coexisting_variants, I_variant_eq, x_eq, convergence = (
             check_stability_of_variants(
                 new_coexisting_variants,
@@ -497,6 +535,7 @@ def check_stability_of_variants(
                 atol=atol,
                 verbosity_level=verbosity_level,
                 use_inv_formulation=use_inv_formulation,
+                _I_variant_prev=warm_start,
             )
         )
         if convergence == 1:
@@ -518,7 +557,7 @@ def find_stable_multi_variant_equilibrium(
     verbosity_level: int = 0,
     use_inv_formulation: bool = True,
     ordered_check: bool = True,
-) -> tuple[list, np.ndarray, np.ndarray, int]:
+) -> tuple[list[int], np.ndarray, np.ndarray, int]:
     """
     Finds the set of coexisting variants in the stable equilibrium.
 
@@ -566,7 +605,7 @@ def find_stable_multi_variant_equilibrium(
 
     Returns
     -------
-    coexisting_variants : list
+    coexisting_variants : list[int]
         List of coexisting variants in stable equilibrium.
     I_variant_eq : np.ndarray
         Infectious fraction per variant at equilibrium.
@@ -616,7 +655,7 @@ def find_stable_multi_variant_equilibrium(
             convergence = 1
             return [], I_variant_eq, x_eq, convergence
         else:
-            I_variant_guess = 1 * np.ones(n_variants)
+            I_variant_guess = 0.1 * np.ones(n_variants)
             for subset in subsets_of(np.arange(n_variants)):
                 I_variant_eq, I_eq, x_eq = find_multi_variant_equilibrium(
                     beta,
@@ -629,7 +668,7 @@ def find_stable_multi_variant_equilibrium(
                     b,
                     I_variant_guess,
                     free_indices=subset,
-                    bounds=(0, 1),
+                    atol=atol,
                     use_inv_formulation=use_inv_formulation,
                 )
                 inv_r0 = invasion_reproduction_number_multiple_variants(
@@ -653,7 +692,18 @@ def find_stable_multi_variant_equilibrium(
                     convergence = 1
                     return subset, I_variant_eq, x_eq, convergence
             I_variant_eq, I_eq, x_eq = find_multi_variant_equilibrium(
-                beta, gamma, sigma, V, G, T, S, b, I_variant_guess
+                beta,
+                gamma,
+                sigma,
+                V,
+                G,
+                T,
+                S,
+                b,
+                I_variant_guess,
+                free_indices=list(np.arange(n_variants)),
+                atol=atol,
+                use_inv_formulation=use_inv_formulation,
             )
             convergence = 1
             return list(np.arange(n_variants)), I_variant_eq, x_eq, convergence

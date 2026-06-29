@@ -11,22 +11,24 @@ from cross_immunity_model import (
     multi_variant_model,
     multi_variant_model_for_loops,
     multi_variant_model_with_matrices,
+    invasion_reproduction_number_multiple_variants,
 )
 
 # Solve a two-variant model
 t0 = 0
-tf = 100
+tf = 1000
 x0 = np.array([0.998, 0, 0.001, 0, 0.001, 0, 0, 0, 0])
 beta = [0.3, 0.35]
 gamma = [0.1, 0.1]
 sigma = np.array([[1, 0.8], [0.8, 1]])
+b = 0.01
 
 res12 = solve_ivp(
     multi_variant_model,
     (t0, tf),
     x0,
     t_eval=np.arange(tf),
-    args=(beta, gamma, sigma),
+    args=(beta, gamma, sigma, b),
 )
 
 plt.plot(
@@ -34,6 +36,11 @@ plt.plot(
     res12.y.T,
     label=["s", "r1", "i1", "r2", "i2", "r12", "i1,12", "i2,12", "i12"],
 )
+inv_r0 = [
+    invasion_reproduction_number_multiple_variants(x, beta, gamma, b)
+    for x in res12.y.T
+]
+plt.plot(res12.t, inv_r0, label=["inv_r01", "inv_r02"])
 plt.xlabel("Time")
 plt.ylabel("Compartment size")
 plt.legend()
