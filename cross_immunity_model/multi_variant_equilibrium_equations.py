@@ -329,7 +329,7 @@ def find_multi_variant_equilibrium(
     x_eq : np.ndarray
         Equilibrium state in vector form.
     """
-    if list(free_indices) == []:
+    if free_indices is None or len(free_indices) == 0:
         I_variant = np.zeros(len(beta))
     else:
         I_variant = solve_multi_variant_equilibrium_equation(
