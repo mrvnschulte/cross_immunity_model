@@ -329,7 +329,7 @@ def find_multi_variant_equilibrium(
     x_eq : np.ndarray
         Equilibrium state in vector form.
     """
-    if free_indices == []:
+    if list(free_indices) == []:
         I_variant = np.zeros(len(beta))
     else:
         I_variant = solve_multi_variant_equilibrium_equation(
@@ -448,7 +448,7 @@ def check_stability_of_variants(
         I_variant_guess = _I_variant_prev.copy()
     else:
         I_variant_guess = np.zeros(n_variants)
-        I_variant_guess[coexisting_variants] = 0.1
+        I_variant_guess[coexisting_variants] = 0.05
 
     I_variant_eq, I_eq, x_eq = find_multi_variant_equilibrium(
         beta,
@@ -518,7 +518,7 @@ def check_stability_of_variants(
         new_candidate_variants = candidate_variants[i + 1 :]
 
         warm_start = I_variant_eq.copy()
-        warm_start[candidate] = 0.1
+        warm_start[candidate] = 0.05
 
         stable_coexisting_variants, I_variant_eq, x_eq, convergence = (
             check_stability_of_variants(

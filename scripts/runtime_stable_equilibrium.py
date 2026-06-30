@@ -8,8 +8,8 @@ equilibrium for varying numbers of variants:
 
 For each variant count, N_parameters independent parameter sets are sampled
 following the same procedure as in numerical_stability_multiple_variants.py.
-Each method is timed once per parameter set; mean and standard deviation
-across parameter sets are shown in the final plot.
+Each method is timed once per parameter set; mean and standard deviation or
+minima and maxima across parameter sets are shown in the final plot.
 """
 
 import time

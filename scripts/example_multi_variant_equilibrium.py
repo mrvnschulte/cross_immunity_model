@@ -17,11 +17,11 @@ from cross_immunity_model import (
 beta = [0.35, 0.3, 0.15]
 gamma = [0.1, 0.1, 0.1]
 sigma_12 = 0.5
-sigma_23 = 0.42
+sigma_23 = 0.41
 b = 0.01
 I_variant_guess = [0.4, 0.2, 0.1]
 bounds = ([0, 0, 0], [1, 1, 1])
-atol = 1e-3
+atol = 1e-4
 
 sigma = np.array(
     [

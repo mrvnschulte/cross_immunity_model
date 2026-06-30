@@ -201,6 +201,7 @@ incidence = cumulative_cases_to_incidence(cumulative_cases, population, window=7
 | `non_transitivity_example.py` | Non-transitivity of invasion ability |
 | `runtime_model_formulations.py` | Runtime comparison of model formulations |
 | `runtime_stable_equilibrium.py` | Runtime and accuracy comparison of different algorithms |
+| `sensitivity_equilibrium_formulations.py` | Sensitivity analysis of equilibrium formulations |
 | `linearized_two_variant_model.py` | Symbolic linearization of the two-variant model |
 | `proof_two_variant_equilibrium.py` | Proof: at most 4 endemic equilibria in the two-variant model |
 | `symbolic_computation_reproduction_number.py` | Symbolic computation of invasion reproduction numbers |
