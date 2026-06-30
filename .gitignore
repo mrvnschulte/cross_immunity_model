@@ -2,3 +2,4 @@
 *.egg-info
 .coverage
 *.jpg
+__pycache__/

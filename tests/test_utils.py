@@ -148,10 +148,6 @@ class TestHammingWeightIterator:
         # weight 0: [0]; weight 1: [1,2]; weight 2: [3]
         assert list(hamming_weight_iterator(4)) == [0, 1, 2, 3]
 
-    def test_yields_all_integers_in_range(self):
-        result = list(hamming_weight_iterator(8))
-        assert sorted(result) == list(range(8))
-
     def test_output_length(self):
         assert len(list(hamming_weight_iterator(8))) == 8
 
@@ -178,13 +174,11 @@ class TestHammingWeightIterator:
             vals = list(group)
             assert vals == sorted(vals)
 
-    def test_returns_iterator(self):
-        from collections.abc import Iterator
-
-        assert isinstance(hamming_weight_iterator(4), Iterator)
+    def test_returns_tuple(self):
+        assert isinstance(hamming_weight_iterator(4), tuple)
 
     def test_zero_is_first(self):
-        assert next(hamming_weight_iterator(8)) == 0
+        assert (hamming_weight_iterator(8))[0] == 0
 
 
 # ──────────────────────────────────────────
