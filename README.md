@@ -64,6 +64,7 @@ cross_immunity_model/
 ├── two_variant_equilibrium_equations.py      # Two-variant equilibrium equations
 ├── invasion_reproduction_number.py           # Invasion analysis
 ├── create_initial_conditions.py              # Initial conditions from seroprevalence
+├── random_parameters.py                      # Random parameter generation
 ├── symbolic_system.py                        # Symbolic model & Jacobian
 ├── case_transformations.py                   # Case count utilities
 └── utils.py                                  # General utility functions
@@ -199,6 +200,7 @@ incidence = cumulative_cases_to_incidence(cumulative_cases, population, window=7
 | `numerical_stability_multiple_variants.py` | Numerical stability checks for n-variant models |
 | `non_transitivity_example.py` | Non-transitivity of invasion ability |
 | `runtime_model_formulations.py` | Runtime comparison of model formulations |
+| `runtime_stable_equilibrium.py` | Runtime and accuracy comparison of different algorithms |
 | `linearized_two_variant_model.py` | Symbolic linearization of the two-variant model |
 | `proof_two_variant_equilibrium.py` | Proof: at most 4 endemic equilibria in the two-variant model |
 | `symbolic_computation_reproduction_number.py` | Symbolic computation of invasion reproduction numbers |
@@ -274,6 +276,14 @@ incidence = cumulative_cases_to_incidence(cumulative_cases, population, window=7
 | `create_protection_state_from_seroprevalence` | Protection state from seroprevalence data |
 | `distribute_infectious_fraction` | Distribute infectious individuals across protection states |
 
+### Random Parameters
+
+| Function | Description |
+|----------|-------------|
+| `sample_symmetric_beta_matrix` | Sample a symmetric cross-immunity matrix |
+| `sample_random_parameters` | Sample random model parameters |
+| `random_simplex_points` | Generate random points on the standard simplex |
+
 ### Symbolic System
 
 | Function | Description |
@@ -300,7 +310,6 @@ incidence = cumulative_cases_to_incidence(cumulative_cases, population, window=7
 | `hamming_weight_iterator` | Iterate over integers ordered by Hamming weight |
 | `is_subset` | Check subset relation via binary representation |
 | `number_of_variants` | Determine number of variants from state size |
-| `random_simplex_points` | Generate random points on the standard simplex |
 | `subsets_of` | Return all subsets of a given index set |
 | `variant_in_set` | Check whether variant k is in set i |
 
