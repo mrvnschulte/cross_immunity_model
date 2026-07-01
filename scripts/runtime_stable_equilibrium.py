@@ -21,11 +21,11 @@ from scipy.integrate import solve_ivp
 from cross_immunity_model import (
     construct_matrices,
     find_stable_multi_variant_equilibrium,
+    infectious_per_variant,
+    invasion_reproduction_number_multiple_variants,
     multi_variant_model_with_matrices,
     sample_random_parameters,
     solve_multi_variant_equilibrium_equation,
-    infectious_per_variant,
-    invasion_reproduction_number_multiple_variants,
 )
 
 
