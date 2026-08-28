@@ -191,6 +191,7 @@ incidence = cumulative_cases_to_incidence(cumulative_cases, population, window=7
 
 | Script | Description |
 |--------|-------------|
+| `comparison_independent_transmission.py` | Comparison of a model with and without co-infection |
 | `example_multi_variant_models.py` | Simulating 1-, 2-, and 3-variant systems |
 | `example_multi_variant_equilibrium.py` | Computing and analysing equilibria of a 3-variant model |
 | `endemic_equilibrium_sensitivity.py` | Sensitivity of equilibrium w.r.t. parameters |
