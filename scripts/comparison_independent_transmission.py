@@ -182,6 +182,9 @@ plt.legend(
 )
 plt.xlabel("Time")
 plt.ylabel("Fraction of the population")
+plt.xlim(t0, tf)
+plt.ylim(0, None)
+plt.grid(alpha=0.7)
 plt.tight_layout()
 plt.savefig(
     f"../plots/comparison_independent_transmission.{fileformat}", dpi=dpi
@@ -259,8 +262,11 @@ plt.legend(
         dashed_line,
     ]
 )
-plt.xlabel("Time")
+plt.xlabel(r"Time $t$ [days]")
 plt.ylabel("Fraction of the population")
+plt.xlim(t0, tf)
+plt.ylim(0, 1)
+plt.grid(alpha=0.7)
 plt.tight_layout()
 plt.savefig(
     f"../plots/comparison_independent_transmission_recovered.{fileformat}",
