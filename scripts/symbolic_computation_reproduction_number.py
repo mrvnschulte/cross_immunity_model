@@ -87,49 +87,43 @@ sigma = symbols("sigma")
 b = symbols("b")
 
 # Define abbreviations
-x_4 = (1 - sigma) * b * (1 / (gamma_2 + b) - 1 / beta_2)
-x_5 = sigma * b * (1 / (gamma_2 + b) - 1 / beta_2)
-x_6 = (gamma_2 + b) / beta_2
-x_8 = gamma_2 / b * (1 - sigma) * b * (1 / (gamma_2 + b) - 1 / beta_2)
+R_01 = beta_1 / (gamma_1 + b)
+I_11 = (1 - sigma) * b / beta_1 * (R_01 - 1)
+I_112 = sigma * b / beta_1 * (R_01 - 1)
+I_00 = 1 / R_01
+I_01 = (1 - sigma) * gamma_1 / beta_1 * (R_01 - 1)
+I_1 = I_11 + I_112
 
-first_sum = (
-    1 / (gamma_1 + beta_2 * (x_4 + x_5) + b)
-    + gamma_2
-    * beta_2
-    * (x_4 + x_5)
-    / (
-        (gamma_1 + b)
-        * (gamma_1 + beta_2 * (x_4 + x_5) + b)
-        * (gamma_1 + gamma_2 + b)
-    )
-    + beta_2
-    * (x_4 + x_5)
-    / ((gamma_1 + beta_2 * (x_4 + x_5) + b) * (gamma_1 + gamma_2 + b))
+p = (
+    1 / (beta_1 * I_1 + gamma_2 + b)
+    + (gamma_1 * beta_1 * I_1)
+    / ((beta_1 * I_1 + gamma_2 + b) * (gamma_2 + b) * (gamma_1 + gamma_2 + b))
+    + (beta_1 * I_1) / ((beta_1 * I_1 + gamma_2 + b) * (gamma_1 + gamma_2 + b))
 )
-second_sum = gamma_2 / ((gamma_1 + b) * (gamma_1 + gamma_2 + b)) + 1 / (
-    (gamma_1 + gamma_2 + b)
+q = gamma_1 / ((gamma_2 + b) * (gamma_1 + gamma_2 + b)) + (
+    1 / (gamma_1 + gamma_2 + b)
 )
 
 # Define next-generation matrix
 FV_invasion = Matrix(
     [
         [
-            (1 - sigma) * beta_1 * x_6 * first_sum,
-            (sigma * beta_1 * x_6 + beta_1 * x_8) * first_sum,
-            beta_1 * x_4 * first_sum,
+            (1 - sigma) * beta_2 * I_00 * p,
+            (1 - sigma) * beta_2 * I_00 / (gamma_2 + b),
+            (1 - sigma) * beta_2 * I_00 * q,
         ],
         [
-            (1 - sigma) * beta_1 * x_6 / (gamma_1 + b),
-            (sigma * beta_1 * x_6 + beta_1 * x_8) / (gamma_1 + b),
-            beta_1 * x_4 / (gamma_1 + b),
+            (sigma * beta_2 * I_00 + beta_2 * I_01) * p,
+            (sigma * beta_2 * I_00 + beta_2 * I_01) / (gamma_2 + b),
+            (sigma * beta_2 * I_00 + beta_2 * I_01) * q,
         ],
         [
-            (1 - sigma) * beta_1 * x_6 * second_sum,
-            (sigma * beta_1 * x_6 + beta_1 * x_8) * second_sum,
-            beta_1 * x_4 * second_sum,
+            beta_2 * I_11 * p,
+            beta_2 * I_11 / (gamma_2 + b),
+            beta_2 * I_11 * q,
         ],
     ]
-).transpose()
+)
 eigvals = FV_invasion.eigenvals(simplify=True)
 
 print(
