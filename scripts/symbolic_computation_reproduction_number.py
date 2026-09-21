@@ -8,6 +8,8 @@ from sympy import Matrix, symbols
 
 
 ### STEP 1: Compute the eigenvalues of the two-variant model
+print("### STEP 1: Compute the eigenvalues of the two-variant model\n")
+
 sigma = symbols("sigma")
 r01 = symbols("r01")
 r02 = symbols("r02")
@@ -22,7 +24,6 @@ FV = Matrix(
 )
 eigenvectors = FV.eigenvects()
 
-print("### STEP 1: Compute the eigenvalues of the two-variant model\n")
 for eigenvalue, multiplicity, vects in eigenvectors:
     print(
         f"Eigenvalue {eigenvalue} has multiplicity {multiplicity} with "
@@ -31,6 +32,11 @@ for eigenvalue, multiplicity, vects in eigenvectors:
 
 
 ### STEP 2: Compute the eigenvalues of a block of the three-variant model
+print(
+    "\n\n\n### STEP 2: Compute the eigenvalues of a block of the "
+    "three-variant model\n"
+)
+
 sigma_12 = symbols("sigma_12")
 sigma_13 = symbols("sigma_13")
 
@@ -64,10 +70,6 @@ FV = Matrix(
 )
 eigenvectors = FV.eigenvects()
 
-print(
-    "\n\n\n### STEP 2: Compute the eigenvalues of a block of the "
-    "three-variant model\n"
-)
 for eigenvalue, multiplicity, vects in eigenvectors:
     print(
         f"Eigenvalue {eigenvalue} has multiplicity {multiplicity} with "
@@ -77,6 +79,10 @@ for eigenvalue, multiplicity, vects in eigenvectors:
 
 ### STEP 3: Compute the eigenvalues of the two-variant model for variant 1
 ### invading variant 2 equilibrium
+print(
+    "\n\n\n### STEP 3: Compute the eigenvalues of the two-variant model for "
+    "variant 1 invading variant 2 equilibrium\n"
+)
 
 # Define symbolic variables
 beta_1 = symbols("beta_1")
@@ -126,8 +132,4 @@ FV_invasion = Matrix(
 )
 eigvals = FV_invasion.eigenvals(simplify=True)
 
-print(
-    "\n\n\n### STEP 3: Compute the eigenvalues of the two-variant model for "
-    "variant 1 invading variant 2 equilibrium\n"
-)
 print(f"The eigenvalues of the next-generation matrix are: {eigvals}")

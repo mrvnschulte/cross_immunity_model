@@ -76,7 +76,13 @@ def two_variant_model_without_coinfection(
     return f
 
 
-# Set parameters
+dpi = 1200
+fileformat = "jpg"
+folder = "../plots"
+fontsize_text = 16
+fontsize_ticks = 14
+
+# Set model parameters
 infectious_at_start = 0.001
 t0 = 0
 tf = 250
@@ -86,9 +92,6 @@ gamma1 = 0.1
 gamma2 = 0.1
 sigma = 0
 b = 0
-
-dpi = 500
-fileformat = "jpg"
 
 # Construct initial conditions from parameter
 x0_coinfection = [0.0 for i in range(9)]
@@ -134,7 +137,7 @@ infectious_with_2_no_coinfection = (
 )
 
 # Plot the results and store them
-plt.figure()
+fig = plt.figure()
 plt.plot(
     sol_coinfection.t,
     infectious_with_1_coinfection,
@@ -162,36 +165,51 @@ plt.plot(
     linestyle="--",
     color="tab:orange",
 )
-blue_line = mlines.Line2D(
-    [], [], color="tab:blue", label="Infectious with strain 1"
-)
-orange_line = mlines.Line2D(
-    [], [], color="tab:orange", label="Infectious with strain 2"
-)
-green_line = mlines.Line2D(
-    [], [], color="tab:green", label="Infectious with both strains"
-)
+blue_line = mlines.Line2D([], [], color="tab:blue", label="strain 1")
+orange_line = mlines.Line2D([], [], color="tab:orange", label="strain 2")
+green_line = mlines.Line2D([], [], color="tab:green", label="both strains")
 solid_line = mlines.Line2D(
-    [], [], color="black", linestyle="-", label="Model with co-infection"
+    [], [], color="black", linestyle="-", label="with co-infection"
 )
 dashed_line = mlines.Line2D(
-    [], [], color="black", linestyle="--", label="Model without co-infection"
+    [], [], color="black", linestyle="--", label="without co-infection"
 )
-plt.legend(
-    handles=[blue_line, orange_line, green_line, solid_line, dashed_line]
+legend_infectious = fig.legend(
+    handles=[blue_line, orange_line, green_line],
+    title="Infectious with",
+    title_fontproperties={"weight": "bold", "size": fontsize_text},
+    loc="upper left",
+    bbox_to_anchor=(0.03, 0.025),
+    fontsize=fontsize_text,
+    frameon=True,
 )
-plt.xlabel("Time")
-plt.ylabel("Fraction of the population")
+
+legend_model = fig.legend(
+    handles=[solid_line, dashed_line],
+    title="Model",
+    title_fontproperties={"weight": "bold", "size": fontsize_text},
+    loc="upper right",
+    bbox_to_anchor=(0.97, 0.025),
+    fontsize=fontsize_text,
+    frameon=True,
+)
+plt.xlabel(r"Time $t$", fontsize=fontsize_text)
+plt.ylabel("Fraction of the population", fontsize=fontsize_text)
 plt.xlim(t0, tf)
 plt.ylim(0, None)
+plt.xticks(fontsize=fontsize_ticks)
+plt.yticks(fontsize=fontsize_ticks)
 plt.grid(alpha=0.7)
 plt.tight_layout()
 plt.savefig(
-    f"../plots/comparison_independent_transmission.{fileformat}", dpi=dpi
+    f"{folder}/comparison_independent_transmission.{fileformat}",
+    dpi=dpi,
+    bbox_inches="tight",
+    bbox_extra_artists=(legend_infectious, legend_model),
 )
 plt.show()
 
-plt.figure()
+fig = plt.figure()
 plt.plot(
     sol_coinfection.t, sol_coinfection.y[6], linestyle="-", color="tab:blue"
 )
@@ -234,42 +252,47 @@ plt.plot(
     linestyle="--",
     color="tab:red",
 )
-blue_line = mlines.Line2D(
-    [], [], color="tab:blue", label="Recovered from strain 1"
-)
-orange_line = mlines.Line2D(
-    [], [], color="tab:orange", label="Recovered from strain 2"
-)
-green_line = mlines.Line2D(
-    [], [], color="tab:green", label="Recovered from both strains"
-)
-red_line = mlines.Line2D(
-    [], [], color="tab:red", label="Recovered from any strain"
-)
+blue_line = mlines.Line2D([], [], color="tab:blue", label="strain 1")
+orange_line = mlines.Line2D([], [], color="tab:orange", label="strain 2")
+green_line = mlines.Line2D([], [], color="tab:green", label="both strains")
+red_line = mlines.Line2D([], [], color="tab:red", label="any strain")
 solid_line = mlines.Line2D(
-    [], [], color="black", linestyle="-", label="Model with co-infection"
+    [], [], color="black", linestyle="-", label="with co-infection"
 )
 dashed_line = mlines.Line2D(
-    [], [], color="black", linestyle="--", label="Model without co-infection"
+    [], [], color="black", linestyle="--", label="without co-infection"
 )
-plt.legend(
-    handles=[
-        blue_line,
-        orange_line,
-        green_line,
-        red_line,
-        solid_line,
-        dashed_line,
-    ]
+legend_infectious = fig.legend(
+    handles=[blue_line, orange_line, green_line, red_line],
+    title="Recovered from",
+    title_fontproperties={"weight": "bold", "size": fontsize_text},
+    loc="upper left",
+    bbox_to_anchor=(0.03, 0.025),
+    fontsize=fontsize_text,
+    frameon=True,
 )
-plt.xlabel(r"Time $t$ [days]")
-plt.ylabel("Fraction of the population")
+
+legend_model = fig.legend(
+    handles=[solid_line, dashed_line],
+    title="Model",
+    title_fontproperties={"weight": "bold", "size": fontsize_text},
+    loc="upper right",
+    bbox_to_anchor=(0.97, 0.025),
+    fontsize=fontsize_text,
+    frameon=True,
+)
+plt.xlabel(r"Time $t$", fontsize=fontsize_text)
+plt.ylabel("Fraction of the population", fontsize=fontsize_text)
 plt.xlim(t0, tf)
 plt.ylim(0, 1)
+plt.xticks(fontsize=fontsize_ticks)
+plt.yticks(fontsize=fontsize_ticks)
 plt.grid(alpha=0.7)
 plt.tight_layout()
 plt.savefig(
-    f"../plots/comparison_independent_transmission_recovered.{fileformat}",
+    f"{folder}/comparison_independent_transmission_recovered.{fileformat}",
     dpi=dpi,
+    bbox_inches="tight",
+    bbox_extra_artists=(legend_infectious, legend_model),
 )
 plt.show()

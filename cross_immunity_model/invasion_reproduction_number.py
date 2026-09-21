@@ -14,7 +14,7 @@ def invasion_reproduction_number(
     r01: float, r02: float, sigma: float
 ) -> float:
     """
-    Computes the invasion reproduction number of variant 1 invading variant 2
+    Computes the invasion reproduction number of variant 2 invading variant 1
     equilibrium.
 
     Parameters
@@ -32,7 +32,7 @@ def invasion_reproduction_number(
         Invasion reproduction number of variant 1 invading the variant 2
         equilibrium.
     """
-    invasion_r0 = r01 - sigma * (r01 / r02) * (r02 - 1)
+    invasion_r0 = r02 - sigma * (r02 / r01) * (r01 - 1)
     return invasion_r0
 
 
@@ -96,35 +96,9 @@ def critical_sigma(r01: float, r02: float | np.ndarray) -> float | np.ndarray:
     return sigma
 
 
-def critical_r01(r02: float | np.ndarray, sigma: float) -> float | np.ndarray:
-    """
-    Computes the critical r01, over which variant 1 can invade variant 2.
-
-    Parameters
-    ----------
-    r02 : float, or np.ndarray
-        Basic reproduction number of variant 2.
-    sigma : float
-        Cross-immunity between the two variants.
-
-    Returns
-    -------
-    r01 : float, or np.ndarray
-        Critical basic reproduction number of variant 1, over which variant 1
-        can invade variant 2.
-    """
-    r02 = np.asarray(r02, dtype=float)
-    r01 = np.ones_like(r02)
-    mask = r02 > 1
-    r01[mask] = 1.0 / (1.0 - sigma / r02[mask] * (r02[mask] - 1.0))
-    if r01.ndim == 0:
-        r01 = float(r01)
-    return r01
-
-
 def critical_r02(r01: float | np.ndarray, sigma: float) -> float | np.ndarray:
     """
-    Computes the critical r02, under which variant 1 can invade variant 2.
+    Computes the critical r01, over which variant 2 can invade variant 1.
 
     Parameters
     ----------
@@ -136,15 +110,41 @@ def critical_r02(r01: float | np.ndarray, sigma: float) -> float | np.ndarray:
     Returns
     -------
     r01 : float, or np.ndarray
-        Critical basic reproduction number of variant 2, under which variant 1
+        Critical basic reproduction number of variant 1, over which variant 1
         can invade variant 2.
     """
     r01 = np.asarray(r01, dtype=float)
     r02 = np.ones_like(r01)
-    mask = r01 >= 1
-    r02_star = sigma * 1 / (sigma + 1 / r01 - 1)
-    r02[mask] = r02_star[mask]
-    r02[mask & (r02_star <= 0)] = np.inf
+    mask = r01 > 1
+    r02[mask] = 1.0 / (1.0 - sigma / r01[mask] * (r01[mask] - 1.0))
     if r02.ndim == 0:
         r02 = float(r02)
     return r02
+
+
+def critical_r01(r02: float | np.ndarray, sigma: float) -> float | np.ndarray:
+    """
+    Computes the critical r01, under which variant 2 can invade variant 1.
+
+    Parameters
+    ----------
+    r02 : float, or np.ndarray
+        Basic reproduction number of variant 2.
+    sigma : float
+        Cross-immunity between the two variants.
+
+    Returns
+    -------
+    r01 : float, or np.ndarray
+        Critical basic reproduction number of variant 1, under which variant 2
+        can invade variant 1.
+    """
+    r02 = np.asarray(r02, dtype=float)
+    r01 = np.ones_like(r02)
+    mask = r02 >= 1
+    r01_star = sigma * 1 / (sigma + 1 / r02 - 1)
+    r01[mask] = r01_star[mask]
+    r01[mask & (r01_star <= 0)] = np.inf
+    if r01.ndim == 0:
+        r01 = float(r01)
+    return r01

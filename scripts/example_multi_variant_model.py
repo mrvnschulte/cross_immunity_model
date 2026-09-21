@@ -11,8 +11,11 @@ from cross_immunity_model import (
     multi_variant_model_with_matrices,
 )
 
+folder = "../plots"
 fileformat = "jpg"
-dpi = 500
+dpi = 1200
+fontsize_text = 16
+fontsize_ticks = 14
 
 # Solve a two-variant model
 t0 = 0
@@ -48,25 +51,27 @@ plt.plot(
         r"$I_{12,12}$",
     ],
 )
-plt.xlabel(r"Time $t$ [days]")
-plt.ylabel("Fraction of the population")
+plt.xlabel(r"Time $t$", fontsize=fontsize_text)
+plt.ylabel("Fraction of the population", fontsize=fontsize_text)
 plt.grid(alpha=0.7)
 plt.legend(
-    loc="upper right",
+    loc="upper left",
+    bbox_to_anchor=(1.02, 1.05),
     title="Compartment",
-    title_fontproperties={"weight": "bold"},
+    title_fontproperties={"weight": "bold", "size": fontsize_text},
+    fontsize=fontsize_text,
 )
 plt.xlim(t0, tf)
 plt.ylim(0, 1)
+plt.xticks(fontsize=fontsize_ticks)
+plt.yticks(fontsize=fontsize_ticks)
 plt.tight_layout()
-plt.savefig(f"../plots/example_two_variant_model.{fileformat}", dpi=dpi)
+plt.savefig(f"{folder}/example_two_variant_model.{fileformat}", dpi=dpi)
 plt.show()
 
 
-# Solves the same system without vital dynamics on a smaller timescale
-# (Approximation of the initial outbreak)
+# Solves the same system on a smaller timescale (initial outbreak)
 tf = 200
-b = 0.001
 
 V, G, T, S = construct_matrices(gamma, sigma)
 
@@ -87,19 +92,22 @@ plt.plot(
     np.array([i_1, i_2, i_12]).T,
     label=["strain 1", "strain 2", "both strains"],
 )
-plt.xlabel(r"Time $t$ [days]")
-plt.ylabel("Fraction of the population")
+plt.xlabel(r"Time $t$", fontsize=fontsize_text)
+plt.ylabel("Fraction of the population", fontsize=fontsize_text)
 plt.grid(alpha=0.7)
 plt.legend(
     loc="upper right",
     title="Infected with",
-    title_fontproperties={"weight": "bold"},
+    title_fontproperties={"weight": "bold", "size": fontsize_text},
+    fontsize=fontsize_text,
 )
 plt.xlim(t0, tf)
 plt.ylim(0, None)
+plt.xticks(fontsize=fontsize_ticks)
+plt.yticks(fontsize=fontsize_ticks)
 plt.tight_layout()
 plt.savefig(
-    f"../plots/example_two_variant_model_initial_outbreak.{fileformat}",
+    f"{folder}/example_two_variant_model_initial_outbreak.{fileformat}",
     dpi=dpi,
 )
 plt.show()
