@@ -73,7 +73,7 @@ def invasion_reproduction_number_multiple_variants(
 
 def critical_sigma(r01: float, r02: float | np.ndarray) -> float | np.ndarray:
     """
-    Computes the critical sigma, under which variant 1 can invade variant 2.
+    Computes the critical sigma, under which variant 2 can invade variant 1.
 
     Parameters
     ----------
@@ -89,8 +89,8 @@ def critical_sigma(r01: float, r02: float | np.ndarray) -> float | np.ndarray:
     """
     r02 = np.asarray(r02, dtype=float)
     sigma = np.asarray(np.ones_like(r02) * np.inf)
-    mask = r02 >= r01
-    sigma[mask] = r02[mask] * (r01 - 1) / (r01 * (r02[mask] - 1))
+    mask = (r01 >= r02) & (r01 > 1)
+    sigma[mask] = r01 * (r02[mask] - 1) / (r02[mask] * (r01 - 1))
     if sigma.ndim == 0:
         sigma = float(sigma)
     return sigma
