@@ -26,14 +26,14 @@ MODULE = "cross_immunity_model.invasion_reproduction_number"
 class TestInvasionReproductionNumber:
 
     def test_known_value(self):
-        # r01=2, r02=3, sigma=0.5: 2 - 0.5*(2/3)*(3-1) = 2 - 2/3 = 4/3
-        result = invasion_reproduction_number(2.0, 3.0, 0.5)
+        # r01=3, r02=2, sigma=0.5: 2 - 0.5*(2/3)*(3-1) = 2 - 2/3 = 4/3
+        result = invasion_reproduction_number(3.0, 2.0, 0.5)
         npt.assert_almost_equal(result, 4 / 3)
 
-    def test_zero_cross_immunity_returns_r01(self):
-        # sigma=0 → invasion_r0 = r01
+    def test_zero_cross_immunity_returns_r02(self):
+        # sigma=0 → invasion_r0 = r02
         result = invasion_reproduction_number(3.0, 2.0, sigma=0.0)
-        npt.assert_almost_equal(result, 3.0)
+        npt.assert_almost_equal(result, 2.0)
 
     def test_full_cross_immunity_equal_r0_returns_one(self):
         # sigma=1, r01=r02 → r01 - (r01/r01)*(r01-1) = 1
@@ -41,26 +41,26 @@ class TestInvasionReproductionNumber:
         npt.assert_almost_equal(result, 1.0)
 
     def test_returns_float(self):
-        result = invasion_reproduction_number(2.0, 3.0, 0.5)
+        result = invasion_reproduction_number(3.0, 2.0, 0.5)
         assert isinstance(result, float)
 
     def test_consistency_with_critical_sigma(self):
         # invasion_r0 must equal 1 at the critical sigma (by definition)
-        r01, r02 = 2.0, 4.0
+        r01, r02 = 4.0, 2.0
         sigma_c = critical_sigma(r01, r02)
         result = invasion_reproduction_number(r01, r02, sigma_c)
         npt.assert_almost_equal(result, 1.0)
 
     def test_consistency_with_critical_r01(self):
         # invasion_r0 must equal 1 at the critical r01 (by definition)
-        r02, sigma = 3.0, 0.5
+        r02, sigma = 1.5, 0.5
         r01_c = critical_r01(r02, sigma)
         result = invasion_reproduction_number(r01_c, r02, sigma)
         npt.assert_almost_equal(result, 1.0)
 
     def test_consistency_with_critical_r02(self):
         # invasion_r0 must equal 1 at the critical r02 (by definition)
-        r01, sigma = 1.5, 0.5
+        r01, sigma = 3.0, 0.5
         r02_c = critical_r02(r01, sigma)
         result = invasion_reproduction_number(r01, r02_c, sigma)
         npt.assert_almost_equal(result, 1.0)
@@ -147,8 +147,8 @@ class TestInvasionReproductionNumberMultipleVariants:
 class TestCriticalSigma:
 
     def test_r02_less_than_r01_returns_inf(self):
-        # Variant 1 can always invade if it has higher R0
-        result = critical_sigma(r01=3.0, r02=2.0)
+        # Variant 2 can always invade if it has higher R0
+        result = critical_sigma(r01=2.0, r02=3.0)
         assert np.isinf(result)
 
     def test_r02_equal_r01_returns_one(self):
@@ -157,8 +157,8 @@ class TestCriticalSigma:
         npt.assert_almost_equal(result, 1.0)
 
     def test_known_value(self):
-        # r01=2, r02=4: sigma_c = 4*(2-1) / (2*(4-1)) = 4/6 = 2/3
-        result = critical_sigma(r01=2.0, r02=4.0)
+        # r01=4, r02=2: sigma_c = 4*(2-1) / (2*(4-1)) = 4/6 = 2/3
+        result = critical_sigma(r01=4.0, r02=2.0)
         npt.assert_almost_equal(result, 2 / 3)
 
     def test_scalar_input_returns_float(self):
@@ -166,28 +166,28 @@ class TestCriticalSigma:
         assert isinstance(result, float)
 
     def test_array_input_returns_ndarray(self):
-        result = critical_sigma(2.0, np.array([2.0, 3.0, 4.0]))
+        result = critical_sigma(4.0, np.array([2.0, 3.0, 4.0]))
         assert isinstance(result, np.ndarray)
 
     def test_array_input_correct_shape(self):
         r02 = np.array([2.0, 3.0, 4.0])
-        result = critical_sigma(r01=2.0, r02=r02)
+        result = critical_sigma(r01=4.0, r02=r02)
         assert result.shape == r02.shape
 
     def test_array_mixed_inf_and_values(self):
-        # r01=2.0, r02=[1.5, 2.0, 4.0] → [inf, 1.0, 2/3]
-        result = critical_sigma(r01=2.0, r02=np.array([1.5, 2.0, 4.0]))
-        assert np.isinf(result[0])
-        npt.assert_almost_equal(result[1], 1.0)
-        npt.assert_almost_equal(result[2], 2 / 3)
+        # r01=3.0, r02=[1.5, 2.0, 4.0] → [0.5, 0.75, inf]
+        result = critical_sigma(r01=3.0, r02=np.array([1.5, 2.0, 4.0]))
+        assert np.isinf(result[2])
+        npt.assert_almost_equal(result[0], 0.5)
+        npt.assert_almost_equal(result[1], 0.75)
 
     def test_result_is_non_negative(self):
         r02 = np.array([2.0, 3.0, 4.0])
-        result = critical_sigma(r01=2.0, r02=r02)
+        result = critical_sigma(r01=4.0, r02=r02)
         assert np.all(result >= 0)
 
     def test_consistency_invasion_r0_equals_one_at_critical_sigma(self):
-        r01, r02 = 2.0, 4.0
+        r01, r02 = 4.0, 2.0
         sigma_c = critical_sigma(r01, r02)
         result = invasion_reproduction_number(r01, r02, sigma_c)
         npt.assert_almost_equal(result, 1.0)
@@ -205,48 +205,41 @@ class TestCriticalR01:
         result = critical_r01(r02=0.5, sigma=0.5)
         npt.assert_almost_equal(result, 1.0)
 
-    def test_r02_equal_one_returns_one(self):
-        result = critical_r01(r02=1.0, sigma=0.5)
-        npt.assert_almost_equal(result, 1.0)
-
     def test_known_value(self):
-        # r02=2, sigma=0.5: r01_c = 1/(1 - 0.5/2*(2-1)) = 1/(0.75) = 4/3
-        result = critical_r01(r02=2.0, sigma=0.5)
-        npt.assert_almost_equal(result, 4 / 3)
+        # r02=1.5, sigma=0.5: r01_c = 0.5/(0.5 + 1/1.5 - 1) = 0.5/(1/6) = 3.0
+        result = critical_r01(r02=1.5, sigma=0.5)
+        npt.assert_almost_equal(result, 3.0)
 
-    def test_zero_cross_immunity_returns_one(self):
-        # sigma=0 → r01_c = 1/(1 - 0) = 1
-        result = critical_r01(r02=3.0, sigma=0.0)
-        npt.assert_almost_equal(result, 1.0)
+    def test_sigma_zero_returns_inf(self):
+        # sigma=0, r02>1: r01_c = inf
+        result = critical_r01(r02=2.0, sigma=0.0)
+        assert np.isinf(result)
 
     def test_scalar_input_returns_float(self):
-        result = critical_r01(r02=2.0, sigma=0.5)
+        result = critical_r01(r02=1.5, sigma=0.5)
         assert isinstance(result, float)
 
-    def test_array_input_returns_ndarray(self):
-        result = critical_r01(r02=np.array([0.5, 2.0, 3.0]), sigma=0.5)
+    def test_array_all_above_one_returns_ndarray(self):
+        result = critical_r01(r02=np.array([1.5, 2.0]), sigma=0.8)
         assert isinstance(result, np.ndarray)
 
-    def test_array_input_correct_shape(self):
-        r02 = np.array([0.5, 2.0, 3.0])
-        result = critical_r01(r02, sigma=0.5)
+    def test_array_all_above_one_correct_shape(self):
+        r02 = np.array([1.5, 2.0])
+        result = critical_r01(r02, sigma=0.8)
         assert result.shape == r02.shape
 
-    def test_array_mixed_values(self):
-        # r02=[0.5, 1.0, 2.0], sigma=0.5 → [1.0, 1.0, 4/3]
-        r02 = np.array([0.5, 1.0, 2.0])
+    def test_array_all_below_one_returns_ones(self):
+        r02 = np.array([0.3, 0.5, 0.9])
         result = critical_r01(r02, sigma=0.5)
-        npt.assert_almost_equal(result[0], 1.0)
-        npt.assert_almost_equal(result[1], 1.0)
-        npt.assert_almost_equal(result[2], 4 / 3)
+        npt.assert_array_almost_equal(result, np.ones(3))
 
-    def test_result_greater_or_equal_one(self):
-        r02 = np.array([0.5, 2.0, 3.0, 5.0])
-        result = critical_r01(r02, sigma=0.5)
-        assert np.all(result >= 1.0)
+    def test_result_positive_or_inf(self):
+        r02 = np.array([1.5, 2.0, 3.0])
+        result = critical_r01(r02, sigma=0.8)
+        assert np.all((result > 0) | np.isinf(result))
 
     def test_consistency_invasion_r0_equals_one_at_critical_r01(self):
-        r02, sigma = 3.0, 0.5
+        r02, sigma = 1.5, 0.5
         r01_c = critical_r01(r02, sigma)
         result = invasion_reproduction_number(r01_c, r02, sigma)
         npt.assert_almost_equal(result, 1.0)
@@ -264,41 +257,48 @@ class TestCriticalR02:
         result = critical_r02(r01=0.5, sigma=0.5)
         npt.assert_almost_equal(result, 1.0)
 
-    def test_known_value(self):
-        # r01=1.5, sigma=0.5: r02_star = 0.5/(0.5 + 1/1.5 - 1) = 0.5/(1/6) = 3.0
-        result = critical_r02(r01=1.5, sigma=0.5)
-        npt.assert_almost_equal(result, 3.0)
+    def test_r01_equal_one_returns_one(self):
+        result = critical_r02(r01=1.0, sigma=0.5)
+        npt.assert_almost_equal(result, 1.0)
 
-    def test_sigma_zero_returns_inf(self):
-        # sigma=0, r01>1: r02_star = 0 → inf
-        result = critical_r02(r01=2.0, sigma=0.0)
-        assert np.isinf(result)
+    def test_known_value(self):
+        # r01=2, sigma=0.5: r02_c = 1/(1 - 0.5/2*(2-1)) = 1/(0.75) = 4/3
+        result = critical_r02(r01=2.0, sigma=0.5)
+        npt.assert_almost_equal(result, 4 / 3)
+
+    def test_zero_cross_immunity_returns_one(self):
+        # sigma=0 → r02_c = 1/(1 - 0) = 1
+        result = critical_r02(r01=3.0, sigma=0.0)
+        npt.assert_almost_equal(result, 1.0)
 
     def test_scalar_input_returns_float(self):
-        result = critical_r02(r01=1.5, sigma=0.5)
+        result = critical_r02(r01=2.0, sigma=0.5)
         assert isinstance(result, float)
 
-    def test_array_all_above_one_returns_ndarray(self):
-        result = critical_r02(r01=np.array([1.5, 2.0]), sigma=0.8)
+    def test_array_input_returns_ndarray(self):
+        result = critical_r02(r01=np.array([0.5, 2.0, 3.0]), sigma=0.5)
         assert isinstance(result, np.ndarray)
 
-    def test_array_all_above_one_correct_shape(self):
-        r01 = np.array([1.5, 2.0])
-        result = critical_r02(r01, sigma=0.8)
+    def test_array_input_correct_shape(self):
+        r01 = np.array([0.5, 2.0, 3.0])
+        result = critical_r02(r01, sigma=0.5)
         assert result.shape == r01.shape
 
-    def test_array_all_below_one_returns_ones(self):
-        r01 = np.array([0.3, 0.5, 0.9])
+    def test_array_mixed_values(self):
+        # r01=[0.5, 1.0, 2.0], sigma=0.5 → [1.0, 1.0, 4/3]
+        r01 = np.array([0.5, 1.0, 2.0])
         result = critical_r02(r01, sigma=0.5)
-        npt.assert_array_almost_equal(result, np.ones(3))
+        npt.assert_almost_equal(result[0], 1.0)
+        npt.assert_almost_equal(result[1], 1.0)
+        npt.assert_almost_equal(result[2], 4 / 3)
 
-    def test_result_positive_or_inf(self):
-        r01 = np.array([1.5, 2.0, 3.0])
-        result = critical_r02(r01, sigma=0.8)
-        assert np.all((result > 0) | np.isinf(result))
+    def test_result_greater_or_equal_one(self):
+        r01 = np.array([0.5, 2.0, 3.0, 5.0])
+        result = critical_r02(r01, sigma=0.5)
+        assert np.all(result >= 1.0)
 
     def test_consistency_invasion_r0_equals_one_at_critical_r02(self):
-        r01, sigma = 1.5, 0.5
+        r01, sigma = 3.0, 0.5
         r02_c = critical_r02(r01, sigma)
         result = invasion_reproduction_number(r01, r02_c, sigma)
         npt.assert_almost_equal(result, 1.0)

@@ -19,6 +19,11 @@ from cross_immunity_model import (
     x_bar,
 )
 
+# Variables for storing plots
+folder = "../plots"
+fileformat = "jpg"
+dpi = 500
+
 # Variables for base scenario
 beta_1 = 0.3
 beta_2 = 0.35
@@ -26,11 +31,9 @@ gamma_1 = 0.1
 gamma_2 = 0.1
 sigma = 0.8
 b = 0.01
+r_01 = beta_1 / (gamma_1 + b)
+r_02 = beta_2 / (gamma_2 + b)
 
-# Variables for storing plots
-folder = "../plots"
-fileformat = "jpg"
-dpi = 500
 
 ### STEP 1: Plot sensitivity of i_1, i_2 on sigma
 
@@ -101,9 +104,7 @@ plt.show()
 
 ### STEP 2: Plot sensitivity of x on sigma
 
-threshold_sigma = critical_sigma(
-    beta_1 / (gamma_1 + b), beta_2 / (gamma_2 + b)
-)
+threshold_sigma = critical_sigma(r_02, r_01)
 
 plt.semilogy(sigmas_line, x_solutions, label=[rf"$x_{i+1}$" for i in range(9)])
 plt.axvline(
@@ -188,7 +189,7 @@ for b_2 in beta_2s:
         args=(beta_1, b_2, gamma_1, gamma_2, sigma, b),
         method="hybr",
     )
-    plt.plot(sol.x[0], sol.x[1], "o", label=rf"$\beta_2={round(beta_2, 2)}$")
+    plt.plot(sol.x[0], sol.x[1], "o", label=rf"$\beta_2={round(b_2, 2)}$")
 
 # Compute and plot two-variant equilibrium for multiple beta_1 (line)
 beta_2s_line = np.linspace(0.2, 0.55, 101)
@@ -223,12 +224,8 @@ plt.show()
 
 ### STEP 6: Plot sensitivity of x on beta_2
 
-lower_threshold_beta2 = (gamma_2 + b) * critical_r01(
-    beta_1 / (gamma_1 + b), sigma
-)
-upper_threshold_beta2 = (gamma_2 + b) * critical_r02(
-    beta_1 / (gamma_1 + b), sigma
-)
+lower_threshold_beta2 = (gamma_2 + b) * critical_r02(r_01, sigma)
+upper_threshold_beta2 = (gamma_2 + b) * critical_r01(r_01, sigma)
 
 plt.semilogy(
     beta_2s_line, x_solutions, label=[rf"$x_{i+1}$" for i in range(9)]
@@ -410,9 +407,7 @@ beta_2s = np.linspace(0.2, 0.6, 9)
 plt.figure(figsize=(5, 5))
 
 for s in sigmas:
-    upper_threshold_beta2 = (gamma_2 + b) * critical_r02(
-        beta_1 / (gamma_1 + b), s
-    )
+    upper_threshold_beta2 = (gamma_2 + b) * critical_r01(r_01, s)
 
     # Compute and plot two-variant equilibria for multiple beta_2 (points)
     plt.gca().set_prop_cycle(None)

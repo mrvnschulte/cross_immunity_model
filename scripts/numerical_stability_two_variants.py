@@ -225,8 +225,8 @@ def check_parameter_sets(
         r_01, r_02 = basic_reproduction_number(
             [beta_1, beta_2], [gamma_1, gamma_2], b_val
         )
-        r_012 = invasion_reproduction_number(r_01, r_02, sigma_val)
-        r_021 = invasion_reproduction_number(r_02, r_01, sigma_val)
+        r_021 = invasion_reproduction_number(r_01, r_02, sigma_val)
+        r_012 = invasion_reproduction_number(r_02, r_01, sigma_val)
         if not (r_012 > threshold_r0 and r_021 > threshold_r0):
             continue
 

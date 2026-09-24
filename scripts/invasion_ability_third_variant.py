@@ -65,8 +65,8 @@ for i, b3 in enumerate(beta_3):
         r0_3to12[i, k] = invasion_reproduction_number_multiple_variants(
             x_eq, beta, gamma, b, V
         )[2]
-        r0_3to1[i, k] = invasion_reproduction_number(r0[2], r0[0], sigma[2, 0])
-        r0_3to2[i, k] = invasion_reproduction_number(r0[2], r0[1], sigma[2, 1])
+        r0_3to1[i, k] = invasion_reproduction_number(r0[0], r0[2], sigma[2, 0])
+        r0_3to2[i, k] = invasion_reproduction_number(r0[1], r0[2], sigma[2, 1])
 
     if plot_single_r0:
         plt.plot(sigma_23, r0_3to12[i], label=r"$R_{0,3\to12}$")
