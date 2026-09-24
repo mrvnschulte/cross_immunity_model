@@ -121,11 +121,11 @@ sol = solve_ivp(
 ```python
 from cross_immunity_model import invasion_reproduction_number
 
-r0_1 = 3.0   # Basic reproduction number of variant 1
-r0_2 = 3.5   # Basic reproduction number of variant 2
+r0_1 = 3.5   # Basic reproduction number of variant 1
+r0_2 = 3.0   # Basic reproduction number of variant 2
 sigma = 0.8  # Cross-immunity
 
-### Can variant 1 invade the variant 2 equilibrium?
+### Can variant 2 invade the variant 1 equilibrium?
 
 r_inv = invasion_reproduction_number(r0_1, r0_2, sigma)
 print(f"Invasion R0 = {r_inv:.3f}")  # > 1 means invasion is possible
@@ -167,10 +167,10 @@ x0 = create_initial_conditions_from_seroprevalence(
 ```python
 from cross_immunity_model import critical_sigma, critical_r01, critical_r02
 
-r0_1 = 3.0
-r0_2 = 3.5
+r0_1 = 3.5
+r0_2 = 3.0
 
-### Critical cross-immunity below which variant 1 can invade variant 2
+### Critical cross-immunity below which variant 2 can invade variant 1
 
 sigma_crit = critical_sigma(r0_1, r0_2)
 print(f"Critical sigma: {sigma_crit:.3f}")
@@ -192,20 +192,20 @@ incidence = cumulative_cases_to_incidence(cumulative_cases, population, window=7
 | Script | Description |
 |--------|-------------|
 | `comparison_independent_transmission.py` | Comparison of a model with and without co-infection |
+| `endemic_equilibrium_sensitivity.py` | Sensitivity of equilibrium w.r.t. parameters |
+| `example_multi_variant_equilibrium.py` | Computing and analysing equilibria of a 3-variant model |
 | `example_multi_variant_model.py` | Simulate 2-variant systems |
 | `example_multi_variant_models.py` | Simulating 1-, 2-, and 3-variant systems |
-| `example_multi_variant_equilibrium.py` | Computing and analysing equilibria of a 3-variant model |
-| `endemic_equilibrium_sensitivity.py` | Sensitivity of equilibrium w.r.t. parameters |
 | `invasion_ability_third_variant.py` | Invasion analysis for a third variant |
-| `plot_invasion_reproduction_number.py` | Visualising invasion regions and critical values |
-| `numerical_stability_two_variants.py` | Numerical stability checks for the two-variant model |
-| `numerical_stability_multiple_variants.py` | Numerical stability checks for n-variant models |
+| `linearized_two_variant_model.py` | Symbolic linearization of the two-variant model |
 | `non_transitivity_example.py` | Non-transitivity of invasion ability |
+| `numerical_stability_multiple_variants.py` | Numerical stability checks for n-variant models |
+| `numerical_stability_two_variants.py` | Numerical stability checks for the two-variant model |
+| `plot_invasion_reproduction_number.py` | Visualising invasion regions and critical values |
+| `proof_two_variant_equilibrium.py` | Proof: at most 4 feasible equilibria in the two-variant model |
 | `runtime_model_formulations.py` | Runtime comparison of model formulations |
 | `runtime_stable_equilibrium.py` | Runtime and accuracy comparison of different algorithms |
 | `sensitivity_equilibrium_formulations.py` | Sensitivity analysis of equilibrium formulations |
-| `linearized_two_variant_model.py` | Symbolic linearization of the two-variant model |
-| `proof_two_variant_equilibrium.py` | Proof: at most 4 endemic equilibria in the two-variant model |
 | `symbolic_computation_reproduction_number.py` | Symbolic computation of invasion reproduction numbers |
 
 ## API Reference
@@ -267,9 +267,9 @@ incidence = cumulative_cases_to_incidence(cumulative_cases, population, window=7
 |----------|-------------|
 | `invasion_reproduction_number` | Two-variant invasion reproduction number |
 | `invasion_reproduction_number_multiple_variants` | Invasion reproduction number at a given equilibrium |
-| `critical_sigma` | Critical cross-immunity for variant 1 to invade variant 2 |
-| `critical_r01` | Critical R0 of variant 1 for invasion |
-| `critical_r02` | Critical R0 of variant 2 for invasion |
+| `critical_sigma` | Critical cross-immunity for variant 2 to invade variant 1 |
+| `critical_r01` | Critical R0 of variant 1 for invasion of variant 2 into variant 1 |
+| `critical_r02` | Critical R0 of variant 2 for invasion of variant 2 into variant 1 |
 
 ### Initial Conditions
 
