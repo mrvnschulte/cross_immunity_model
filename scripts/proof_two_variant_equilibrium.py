@@ -29,8 +29,12 @@ from sympy import (
 from cross_immunity_model import x_bar
 
 
-dpi = 500
+dpi = 1200
 folder = "../plots"
+fileformat = "jpg"
+fontsize_text = 20
+fontsize_ticks = 16
+alpha_grid = 0.7
 
 print("=" * 80)
 print("Proof: Number of solutions in [0,1]²")
@@ -50,9 +54,9 @@ gamma_2 = symbols("gamma_2", real=True, positive=True)
 b = symbols("b", real=True, positive=True)
 
 params_dict = {
-    sigma: Rational(8, 10),
-    beta_2: Rational(35, 100),
-    beta_1: Rational(3, 10),
+    sigma: Rational(65, 100),
+    beta_2: Rational(30, 100),
+    beta_1: Rational(2, 10),
     gamma_1: Rational(1, 10),
     gamma_2: Rational(1, 10),
     b: Rational(1, 100),
@@ -88,7 +92,7 @@ print("\nF1 = x_1 + x_2 + x_3 - i1")
 print("F2 = x_3 + x_4 + x_5 - i2")
 
 
-### STEP 3: POLYNOMIALISATION
+### STEP 3: POLYNOMIALISATION AND DEGREE ANALYSIS
 
 print("\n" + "-" * 80)
 print("STEP 3: Polynomialisation")
@@ -107,13 +111,6 @@ P2 = numer(F2_together)
 print("Nominators extracted")
 print(f"Polynomial P1 is: P1(i1, i2) = {P1}")
 print(f"Polynomial P2 is: P2(i1, i2) = {P2}")
-
-
-### STEP 4: DEGREE ANALYSIS
-
-print("\n" + "-" * 80)
-print("STEP 4: Degree analysis of the polynomials")
-print("-" * 80)
 
 print("\nCompute degrees...")
 deg_P1_i1 = degree(P1, i1)
@@ -137,10 +134,10 @@ bezout_bound = deg_P1 * deg_P2
 print(f"\nNaïve Bézout bound: {deg_P1} × {deg_P2} = {bezout_bound}")
 
 
-### STEP 5: COMMON DIVISOR
+### STEP 4: DIVISION BY COMMON DIVISOR
 
 print("\n" + "-" * 80)
-print("STEP 5: Common divisor of P1 and P2")
+print("STEP 4: Division by common divisor of P1 and P2")
 print("-" * 80)
 
 G = gcd(P1, P2)
@@ -160,13 +157,6 @@ for a in roots(G, i2):
 print("\n✓ G = 0 has NO solutions in [0,1]²!")
 print("  → The common divisor has no solutions in the unit square")
 
-
-### STEP 6: DIVISION BY COMMON DIVISOR
-
-print("\n" + "-" * 80)
-print("STEP 6: Division P1/G and P2/G")
-print("-" * 80)
-
 print("\nCompute Q1 = P1 / G...")
 
 Q1, remainder1 = div(P1, G, i1, i2)
@@ -180,13 +170,6 @@ Q2, remainder2 = div(P2, G, i1, i2)
 print("Q2 computed")
 print(f"Q2(i1, i2) = {Q2}")
 print(f"Remainder: {remainder2}")
-
-
-### STEP 7: DEGREE ANALYSIS OF REDUCED POLYNOMIALS
-
-print("\n" + "-" * 80)
-print("STEP 7: Degrees of the reduced polynomials Q1, Q2")
-print("-" * 80)
 
 deg_Q1_i1 = degree(Q1, i1)
 deg_Q1_i2 = degree(Q1, i2)
@@ -209,10 +192,10 @@ bezout_bound = deg_Q1 * deg_Q2
 print(f"\nNaïve Bézout bound: {deg_Q1} × {deg_Q2} = {bezout_bound}")
 
 
-### STEP 8: RESULTANT OF THE REDUCED SYSTEM
+### STEP 5: RESULTANT OF THE REDUCED SYSTEM
 
 print("\n" + "-" * 80)
-print("STEP 8: Resultant of the reduced system")
+print("STEP 5: Resultant of the reduced system")
 print("-" * 80)
 
 print("\nCompute resultant R_Q = Res(Q1, Q2, i2)...")
@@ -234,10 +217,10 @@ else:
     print(f"R_Q factorised: {R_Q_factored}")
 
 
-### STEP 9: ROOTS OF DIVISOR
+### STEP 6: ROOTS OF DIVISOR
 
 print("\n" + "-" * 80)
-print("STEP 9: Roots of divisor")
+print("STEP 6: Roots of divisor")
 print("-" * 80)
 
 divisor = (
@@ -272,10 +255,10 @@ for a in roots_divisor:
     print("-" * 80)
 
 
-### STEP 10: I2 ROOTS OF Q1
+### STEP 7: I2 ROOTS OF Q1
 
 print("\n" + "-" * 80)
-print("STEP 10: Roots of Q1 wrt i2")
+print("STEP 7: Roots of Q1 wrt i2")
 print("-" * 80)
 
 i2_i1 = roots(Q1, i2)
@@ -306,10 +289,10 @@ i2_i1 = simplify(i2_i1)
 print(f"\nThis implies i2(i1): {i2_i1}")
 
 
-### STEP 11: EXTRACT REMAINING CUBIC FROM RESULTANT
+### STEP 8: EVALUATE REMAINING CUBIC OF RESULTANT AT CRITICAL VALUES OF I2
 
 print("\n" + "-" * 80)
-print("STEP 11: Extract remaining cubic from resultant")
+print("STEP 8: Evaluate remaining cubic of resultant at critical values of i2")
 print("-" * 80)
 
 S, remainder = div(R_Q, divisor)
@@ -317,12 +300,7 @@ S = simplify(S)
 print(f"\nS=R_Q/g: {S}")
 print(f"with remainder: {remainder}")
 
-
-### STEP 12: EVALUATE CUBIC AT CRITICAL VALUES OF I2
-
-print("\n" + "-" * 80)
-print("STEP 12: Evaluate cubic at critical values of i2")
-print("-" * 80)
+i1a = -b / beta_1
 
 i1c = (-(b**2) + b * beta_1 - b * gamma_1) / (b * beta_1 + beta_1 * gamma_1)
 print(f"\nCritical value i1c of i1: {i1c}")
@@ -354,27 +332,36 @@ roots_Si10 = roots(Si10, sigma)
 print(f"With sigma roots: {roots_Si10}")
 
 
-### STEP 13: VISUALIZE IMPORTANT RELATIONS
+### VISUALIZE IMPORTANT RELATIONS
 
 # i2 dependence on i1 and important values
 i2_i1_val = i2_i1.subs(params_dict)
+i1a_val = i1a.subs(params_dict)
 i1d_val = i1d.subs(params_dict)
 i1c_val = i1c.subs(params_dict)
-i1_val = np.linspace(i1d_val + 0.1 * i1d_val, i1c_val + 0.5 * i1c_val, 1001)
-i2_val = [i2_i1_val.subs(i1, i1_v) for i1_v in i1_val]
+epsilon = 1e-8
+i1_start = float(i1a_val + 0.5 * i1a_val)
+i1_split = float(i1d_val)
+i1_end = float(i1c_val + 0.5 * i1c_val)
+i1_left = np.linspace(i1_start, i1_split - epsilon, 500)
+i1_right = np.linspace(i1_split + epsilon, i1_end, 500)
+i2_left = [float(i2_i1_val.subs(i1, x)) for x in i1_left]
+i2_right = [float(i2_i1_val.subs(i1, x)) for x in i1_right]
 
-plt.plot(i1_val, i2_val)
-plt.grid()
-plt.ylim(-0.1, 0.5)
+plt.plot(i1_left, i2_left, color="tab:blue")
+plt.plot(i1_right, i2_right, color="tab:blue")
+plt.grid(alpha=alpha_grid)
+plt.xlim(i1_left[0], i1_right[-1])
+plt.ylim(-0.5, 0.5)
 plt.xticks(
-    np.asarray([i1d_val, 0, i1c_val], dtype=float),
-    labels=[r"$i_1^d$", "0", r"$i_1^c$"],
+    np.asarray([i1a_val, i1d_val, 0, i1c_val], dtype=float),
+    labels=[r"$I_1^a$", r"$I_1^d$", "0", r"$I_1^c$"],
+    fontsize=fontsize_ticks,
 )
-plt.yticks([0], [0])
-plt.xlabel(r"$i_1$")
-plt.ylabel(r"$i_2(i_1)$")
-plt.tight_layout()
-plt.savefig(f"{folder}/i2_i1.jpg", dpi=dpi)
+plt.yticks([0], [0], fontsize=fontsize_ticks)
+plt.xlabel(r"$I_1$", fontsize=fontsize_text)
+plt.ylabel(r"$I_2(I_1)$", fontsize=fontsize_text)
+plt.savefig(f"{folder}/i2_i1.{fileformat}", dpi=dpi, bbox_inches="tight")
 plt.show()
 
 # S(i1c) dependence on sigma and important values
@@ -385,18 +372,14 @@ sigma_val = np.linspace(-0.2, 1.2)
 S1c_val_sigma = [S1c_val.subs(sigma, s) for s in sigma_val]
 
 plt.plot(sigma_val, S1c_val_sigma)
-plt.grid()
-plt.ylim(-2e-8, 6e-8)
+plt.grid(alpha=alpha_grid)
+plt.ylim(-1e-8, 3e-8)
 plt.xlim(-0.1, 1.1)
-plt.xticks(
-    [0, 1],
-    labels=[0, 1],
-)
-plt.yticks([0], [0])
-plt.xlabel(r"$\sigma$")
-plt.ylabel(r"$S(i_1^c)(\sigma)$")
-plt.tight_layout()
-plt.savefig(f"{folder}/Si1c_sigma.jpg", dpi=dpi)
+plt.xticks([0, 1], labels=[0, 1], fontsize=fontsize_ticks)
+plt.yticks([0], [0], fontsize=fontsize_ticks)
+plt.xlabel(r"$\sigma$", fontsize=fontsize_text)
+plt.ylabel(r"$S(I_1^c)(\sigma)$", fontsize=fontsize_text)
+plt.savefig(f"{folder}/Si1c_sigma.{fileformat}", dpi=dpi, bbox_inches="tight")
 plt.show()
 
 # S(i1d) dependence on sigma and important values
@@ -405,18 +388,14 @@ sigma_val = np.linspace(-0.2, 1.2)
 S1d_val_sigma = [S1d_val.subs(sigma, s) for s in sigma_val]
 
 plt.plot(sigma_val, S1d_val_sigma)
-plt.grid()
-plt.ylim(-4e-8, 2e-8)
+plt.grid(alpha=alpha_grid)
+plt.ylim(-1.5e-8, 1e-8)
 plt.xlim(-0.1, 1.1)
-plt.xticks(
-    [0, 1],
-    labels=[0, 1],
-)
-plt.yticks([0], [0])
-plt.xlabel(r"$\sigma$")
-plt.ylabel(r"$S(i_1^d)(\sigma)$")
-plt.tight_layout()
-plt.savefig(f"{folder}/Si1d_sigma.jpg", dpi=dpi)
+plt.xticks([0, 1], labels=[0, 1], fontsize=fontsize_ticks)
+plt.yticks([0], [0], fontsize=fontsize_ticks)
+plt.xlabel(r"$\sigma$", fontsize=fontsize_text)
+plt.ylabel(r"$S(I_1^d)(\sigma)$", fontsize=fontsize_text)
+plt.savefig(f"{folder}/Si1d_sigma.{fileformat}", dpi=dpi, bbox_inches="tight")
 plt.show()
 
 # S(0) dependence on sigma and important values
@@ -429,18 +408,18 @@ sigma_star = r_02 * (r_01 - 1) / (r_01 * (r_02 - 1))
 sigma_star_val = sigma_star.subs(params_dict)
 
 plt.plot(sigma_val, S10_val_sigma)
-plt.grid()
-plt.ylim(-8e-8, 2e-8)
+plt.grid(alpha=alpha_grid)
+plt.ylim(-4e-8, 2e-8)
 plt.xlim(-0.1, 1.1)
 plt.xticks(
     np.asarray([0, sigma_star_val, 1], dtype=float),
-    labels=[0, r"$\sigma_{1\to2}^*$", 1],
+    labels=[0, r"$\sigma^{1\to2}$", 1],
+    fontsize=fontsize_ticks,
 )
-plt.yticks([0], [0])
-plt.xlabel(r"$\sigma$")
-plt.ylabel(r"$S(0)(\sigma)$")
-plt.tight_layout()
-plt.savefig(f"{folder}/Si10_sigma.jpg", dpi=dpi)
+plt.yticks([0], [0], fontsize=fontsize_ticks)
+plt.xlabel(r"$\sigma$", fontsize=fontsize_text)
+plt.ylabel(r"$S(0)(\sigma)$", fontsize=fontsize_text)
+plt.savefig(f"{folder}/Si10_sigma.{fileformat}", dpi=dpi, bbox_inches="tight")
 plt.show()
 
 # S dependence on i1 and important values
@@ -450,15 +429,15 @@ i1_val = np.linspace(i1d_val + 0.2 * i1d_val, i1c_val + 0.2 * i1c_val, 1001)
 i2_val = [S_val.subs(i1, i1_v) for i1_v in i1_val]
 
 plt.plot(i1_val, i2_val)
-plt.grid()
+plt.grid(alpha=alpha_grid)
 plt.xlim(float(i1d_val + 0.1 * i1d_val), float(i1c_val + 0.1 * i1c_val))
 plt.xticks(
     np.asarray([i1d_val, 0, i1c_val], dtype=float),
-    labels=[r"$i_1^d$", "0", r"$i_1^c$"],
+    labels=[r"$I_1^d$", "0", r"$I_1^c$"],
+    fontsize=fontsize_ticks,
 )
-plt.yticks([0], [0])
-plt.xlabel(r"$i_1$")
-plt.ylabel(r"$S(i_1)$")
-plt.tight_layout()
-plt.savefig(f"{folder}/S_i1.jpg", dpi=dpi)
+plt.yticks([0], [0], fontsize=fontsize_ticks)
+plt.xlabel(r"$I_1$", fontsize=fontsize_text)
+plt.ylabel(r"$S(I_1)$", fontsize=fontsize_text)
+plt.savefig(f"{folder}/S_i1.{fileformat}", dpi=dpi, bbox_inches="tight")
 plt.show()
