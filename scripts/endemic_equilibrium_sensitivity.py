@@ -22,7 +22,10 @@ from cross_immunity_model import (
 # Variables for storing plots
 folder = "../plots"
 fileformat = "jpg"
-dpi = 500
+dpi = 1200
+fontsize_text = 20
+fontsize_ticks = 16
+alpha_grid = 0.7
 
 # Variables for base scenario
 beta_1 = 0.3
@@ -34,11 +37,23 @@ b = 0.01
 r_01 = beta_1 / (gamma_1 + b)
 r_02 = beta_2 / (gamma_2 + b)
 
+compartment_names = [
+    r"$I_{1,1}$",
+    r"$I_{1,12}$",
+    r"$I_{12,12}$",
+    r"$I_{2,2}$",
+    r"$I_{2,12}$",
+    r"$I_{\emptyset,\emptyset}$",
+    r"$I_{\emptyset,1}$",
+    r"$I_{\emptyset,2}$",
+    r"$I_{\emptyset,12}$",
+]
+
 
 ### STEP 1: Plot sensitivity of i_1, i_2 on sigma
 
 sigmas = np.linspace(0, 0.9, 10)
-plt.figure(figsize=(5, 5))
+fig = plt.figure(figsize=(5, 5))
 
 # Compute and plot variant 1 equilibrium
 sol = root(
@@ -47,8 +62,18 @@ sol = root(
     args=(beta_1, beta_2, gamma_1, gamma_2, 1, b),
     method="hybr",
 )
-plt.plot(sol.x[0], sol.x[1], "s", label="Variant 1 equilibrium")
+plt.plot(sol.x[0], sol.x[1], "s")  # , label="Variant 1 equilibrium")
 plt.axvline(sol.x[0], linestyle="dashed", color="black", alpha=0.4)
+
+plt.annotate(
+    "Strain 1 equilibrium",
+    xy=(sol.x[0], sol.x[1]),
+    xytext=(-6, 9),
+    textcoords="offset points",
+    fontsize=fontsize_ticks,
+    ha="right",
+)
+
 
 # Compute and plot variant 2 equilibrium
 sol = root(
@@ -57,8 +82,17 @@ sol = root(
     args=(beta_1, beta_2, gamma_1, gamma_2, 1, b),
     method="hybr",
 )
-plt.plot(sol.x[0], sol.x[1], "s", label="Variant 2 equilibrium")
+plt.plot(sol.x[0], sol.x[1], "s")  # , label="Variant 2 equilibrium")
 plt.axhline(sol.x[1], linestyle="dashed", color="black", alpha=0.4)
+
+plt.annotate(
+    "Strain 2 equilibrium",
+    xy=(sol.x[0], sol.x[1]),
+    xytext=(5, 9),
+    textcoords="offset points",
+    fontsize=fontsize_ticks,
+    ha="left",
+)
 plt.gca().set_prop_cycle(None)
 
 # Compute and plot two-variant equilibria for multiple sigma (points)
@@ -69,7 +103,7 @@ for s in sigmas:
         args=(beta_1, beta_2, gamma_1, gamma_2, s, b),
         method="hybr",
     )
-    plt.plot(sol.x[0], sol.x[1], "o", label=rf"$\sigma={round(s, 1)}$")
+    plt.plot(sol.x[0], sol.x[1], "o", label=rf"${round(s, 1)}$")
 
 # Compute and plot two-variant equilibria for multiple sigma (line)
 sigmas_line = np.linspace(0, 1, 101)
@@ -90,96 +124,173 @@ plt.plot(i_solutions[0], i_solutions[1], linestyle="dashed", color="black")
 
 # Label plot
 plt.xlim((-0.002, 0.065))
-plt.ylim((-0.002, 0.065))
-plt.xlabel("Infectious with variant 1")
-plt.ylabel("Infectious with variant 2")
-plt.legend()
-plt.grid()
-plt.tight_layout()
+plt.ylim((-0.002, 0.07))
+plt.xlabel(r"$I_1$", fontsize=fontsize_text)
+plt.ylabel(r"$I_2$", fontsize=fontsize_text)
+plt.xticks(fontsize=fontsize_ticks)
+plt.yticks(fontsize=fontsize_ticks)
+fig.legend(
+    fontsize=fontsize_ticks,
+    loc="upper center",
+    bbox_to_anchor=(0.5, -0.02),
+    ncol=3,
+    title=r"Cross-immunity $\mathbf{\sigma}$",
+    title_fontproperties={
+        "size": fontsize_ticks,
+        "weight": "bold",
+    },
+)
+plt.grid(alpha=alpha_grid)
 plt.savefig(
-    f"{folder}/Endemic_equilibrium_sensitivity_sigma.{fileformat}", dpi=dpi
+    f"{folder}/endemic_equilibrium_sensitivity_sigma.{fileformat}",
+    dpi=dpi,
+    bbox_inches="tight",
 )
 plt.show()
+plt.close()
 
 
 ### STEP 2: Plot sensitivity of x on sigma
 
 threshold_sigma = critical_sigma(r_02, r_01)
 
-plt.semilogy(sigmas_line, x_solutions, label=[rf"$x_{i+1}$" for i in range(9)])
+fig = plt.figure()
+plt.semilogy(
+    sigmas_line, x_solutions, label=[compartment_names[i] for i in range(9)]
+)
 plt.axvline(
     threshold_sigma,
     color="grey",
     linestyle="dashed",
-    label=r"$\sigma_{1\to 2}^*$",
+    # label=r"$\sigma^{1\to 2}$",
 )
-plt.xlabel(r"Cross-immunity $\sigma$")
-plt.ylabel("Compartment size")
+plt.annotate(
+    r"$\sigma^{1\to 2}$",
+    xy=(threshold_sigma, 0),
+    xycoords=("data", "axes fraction"),
+    xytext=(-25, 20),
+    textcoords="offset points",
+    ha="center",
+    va="top",
+    fontsize=fontsize_ticks,
+)
+
+plt.xlabel(r"Cross-immunity $\sigma$", fontsize=fontsize_text)
+plt.ylabel("Compartment size", fontsize=fontsize_text)
+plt.xticks(fontsize=fontsize_ticks)
+plt.yticks(fontsize=fontsize_ticks)
 plt.ylim(bottom=1e-5, top=1)
-plt.legend(loc="lower left")
-plt.grid()
-plt.tight_layout()
+fig.legend(
+    fontsize=fontsize_ticks,
+    loc="upper center",
+    bbox_to_anchor=(0.5, -0.1),
+    ncol=3,
+)
+plt.grid(alpha=alpha_grid)
 plt.savefig(
-    f"{folder}/Endemic_equilibrium_x_sensitivity_sigma.{fileformat}", dpi=dpi
+    f"{folder}/endemic_equilibrium_x_sensitivity_sigma.{fileformat}",
+    dpi=dpi,
+    bbox_inches="tight",
 )
 plt.show()
+plt.close()
 
 
 ### STEP 3: Plot sensitivity of protection states on sigma
 
+fig = plt.figure()
 plt.plot(
     sigmas_line,
     [
         [susceptibles(x), protected_1(x), protected_2(x), protected_12(x)]
         for x in x_solutions
     ],
-    label=["s", r"$p_1$", r"$p_2$", r"$p_{12}$"],
+    label=["no strain", r"strain 1", r"strain 2", r"both strains"],
 )
 plt.axvline(
     threshold_sigma,
     color="grey",
     linestyle="dashed",
-    label=r"$\sigma_{1\to 2}^*$",
+    # label=r"$\sigma_{1\to 2}^*$",
 )
-plt.xlabel(r"Cross-immunity $\sigma$")
-plt.ylabel("Compartment size")
-plt.legend()
-plt.grid()
-plt.tight_layout()
+plt.annotate(
+    r"$\sigma^{1\to 2}$",
+    xy=(threshold_sigma, 0.67),
+    xycoords=("data", "axes fraction"),
+    xytext=(-25, 0),
+    textcoords="offset points",
+    ha="center",
+    va="top",
+    fontsize=fontsize_ticks,
+)
+plt.xlabel(r"Cross-immunity $\sigma$", fontsize=fontsize_text)
+plt.ylabel("Compartment size", fontsize=fontsize_text)
+plt.xticks(fontsize=fontsize_ticks)
+plt.yticks(fontsize=fontsize_ticks)
+fig.legend(
+    fontsize=fontsize_ticks,
+    loc="upper center",
+    bbox_to_anchor=(0.5, -0.05),
+    ncol=2,
+    title="Protected against",
+    title_fontproperties={
+        "size": fontsize_ticks,
+        "weight": "bold",
+    },
+)
+plt.grid(alpha=alpha_grid)
 plt.savefig(
-    f"{folder}/Endemic_equilibrium_p_sensitivity_sigma.{fileformat}", dpi=dpi
+    f"{folder}/endemic_equilibrium_p_sensitivity_sigma.{fileformat}",
+    dpi=dpi,
+    bbox_inches="tight",
 )
 plt.show()
+plt.close()
 
 
 ### STEP 4: Plot sensitivity of i_1, i_2 on sigma
 
+fig = plt.figure()
 plt.plot(
     sigmas_line,
     i_solutions.T,
-    label=[r"$i_1$", r"$i_2$"],
+    label=[r"$I_1$", r"$I_2$"],
 )
 plt.axvline(
     threshold_sigma,
     color="grey",
     linestyle="dashed",
-    label=r"$\sigma_{1\to 2}^*$",
+    # label=r"$\sigma^{1\to 2}$",
 )
-plt.xlabel(r"Cross-immunity $\sigma$")
-plt.ylabel("Compartment size")
-plt.legend()
-plt.grid()
-plt.tight_layout()
+plt.annotate(
+    r"$\sigma^{1\to 2}$",
+    xy=(threshold_sigma, 0.58),
+    xycoords=("data", "axes fraction"),
+    xytext=(-25, 0),
+    textcoords="offset points",
+    ha="center",
+    va="top",
+    fontsize=fontsize_ticks,
+)
+plt.xlabel(r"Cross-immunity $\sigma$", fontsize=fontsize_text)
+plt.ylabel("Compartment size", fontsize=fontsize_text)
+plt.xticks(fontsize=fontsize_ticks)
+plt.yticks(fontsize=fontsize_ticks)
+plt.legend(fontsize=fontsize_ticks)
+plt.grid(alpha=alpha_grid)
 plt.savefig(
-    f"{folder}/Endemic_equilibrium_i_sensitivity_sigma.{fileformat}", dpi=dpi
+    f"{folder}/endemic_equilibrium_i_sensitivity_sigma.{fileformat}",
+    dpi=dpi,
+    bbox_inches="tight",
 )
 plt.show()
+plt.close()
 
 
-### STEP 5: Plot sensitivity of i_1, i_2 on beta_2
+# ### STEP 5: Plot sensitivity of i_1, i_2 on beta_2
 
 beta_2s = np.linspace(0.2, 0.55, 8)
-plt.figure(figsize=(5, 5))
+fig = plt.figure(figsize=(5, 5))
 
 # Compute and plot two-variant equilibrium for multiple beta_1 (points)
 for b_2 in beta_2s:
@@ -189,7 +300,7 @@ for b_2 in beta_2s:
         args=(beta_1, b_2, gamma_1, gamma_2, sigma, b),
         method="hybr",
     )
-    plt.plot(sol.x[0], sol.x[1], "o", label=rf"$\beta_2={round(b_2, 2)}$")
+    plt.plot(sol.x[0], sol.x[1], "o", label=rf"${round(b_2, 2)}$")
 
 # Compute and plot two-variant equilibrium for multiple beta_1 (line)
 beta_2s_line = np.linspace(0.2, 0.55, 101)
@@ -211,117 +322,221 @@ x_solutions = np.array(x_solutions)
 plt.plot(i_solutions[0], i_solutions[1], linestyle="dashed", color="black")
 
 # Label plot
-plt.xlabel("Infectious with variant 1")
-plt.ylabel("Infectious with variant 2")
-plt.legend()
-plt.grid()
-plt.tight_layout()
+plt.xlabel(r"$I_1$", fontsize=fontsize_text)
+plt.ylabel(r"$I_2$", fontsize=fontsize_text)
+plt.xticks(fontsize=fontsize_ticks)
+plt.yticks(fontsize=fontsize_ticks)
+fig.legend(
+    fontsize=fontsize_ticks,
+    loc="upper center",
+    bbox_to_anchor=(0.5, -0.02),
+    ncol=3,
+    title=r"Transmission rate $\mathbf{\beta_2}$",
+    title_fontproperties={
+        "size": fontsize_ticks,
+        "weight": "bold",
+    },
+)
+plt.grid(alpha=alpha_grid)
 plt.savefig(
-    f"{folder}/Endemic_equilibrium_sensitivity_r02.{fileformat}", dpi=dpi
+    f"{folder}/endemic_equilibrium_sensitivity_r02.{fileformat}",
+    dpi=dpi,
+    bbox_inches="tight",
 )
 plt.show()
-
+plt.close()
 
 ### STEP 6: Plot sensitivity of x on beta_2
 
 lower_threshold_beta2 = (gamma_2 + b) * critical_r02(r_01, sigma)
 upper_threshold_beta2 = (gamma_2 + b) * critical_r01(r_01, sigma)
 
+fig = plt.figure()
 plt.semilogy(
-    beta_2s_line, x_solutions, label=[rf"$x_{i+1}$" for i in range(9)]
+    beta_2s_line, x_solutions, label=[compartment_names[i] for i in range(9)]
 )
 plt.axvline(
     lower_threshold_beta2,
     color="grey",
     linestyle="dashed",
-    label=r"$R_{0,2}^{2\to1}$",
+    # label=r"$R_{0,2}^{2\to1}$",
+)
+plt.annotate(
+    r"$R_{0,2}^{2\to1}$",
+    xy=(lower_threshold_beta2, 0.15),
+    xycoords=("data", "axes fraction"),
+    xytext=(5, 0),
+    textcoords="offset points",
+    ha="left",
+    va="top",
+    fontsize=fontsize_ticks,
 )
 plt.axvline(
     upper_threshold_beta2,
     color="grey",
     linestyle="dotted",
-    label=r"$R_{0,2}^{1\to2}$",
+    # label=r"$R_{0,2}^{1\to2}$",
 )
-plt.xlabel(r"Transmission rate $\beta_2$")
-plt.ylabel("Compartment size")
+plt.annotate(
+    r"$R_{0,2}^{1\to2}$",
+    xy=(upper_threshold_beta2, 0.15),
+    xycoords=("data", "axes fraction"),
+    xytext=(2, 0),
+    textcoords="offset points",
+    ha="left",
+    va="top",
+    fontsize=fontsize_ticks,
+)
+plt.xlabel(r"Transmission rate $\beta_2$", fontsize=fontsize_text)
+plt.ylabel("Compartment size", fontsize=fontsize_text)
+plt.xticks(fontsize=fontsize_ticks)
+plt.yticks(fontsize=fontsize_ticks)
+fig.legend(
+    fontsize=fontsize_ticks,
+    loc="upper center",
+    bbox_to_anchor=(0.5, -0.05),
+    ncol=3,
+)
 plt.ylim(bottom=1e-5, top=1)
-plt.legend(loc=(1.02, 1e-3))
-plt.grid()
-plt.tight_layout()
+plt.grid(alpha=alpha_grid)
 plt.savefig(
-    f"{folder}/Endemic_equilibrium_x_sensitivity_r02.{fileformat}", dpi=dpi
+    f"{folder}/endemic_equilibrium_x_sensitivity_r02.{fileformat}",
+    dpi=dpi,
+    bbox_inches="tight",
 )
 plt.show()
+plt.close()
 
 
 ### STEP 7: Plot sensitivity of protection states on beta_2
 
+fig = plt.figure()
 plt.plot(
     beta_2s_line,
     [
         [susceptibles(x), protected_1(x), protected_2(x), protected_12(x)]
         for x in x_solutions
     ],
-    label=["s", r"$p_1$", r"$p_2$", r"$p_{12}$"],
+    label=["no strain", r"strain 1", r"strain 2", r"both strains"],
 )
 plt.axvline(
     lower_threshold_beta2,
     color="grey",
     linestyle="dashed",
-    label=r"$R_{0,2}^{2\to1}$",
+    # label=r"$R_{0,2}^{2\to1}$",
+)
+plt.annotate(
+    r"$R_{0,2}^{2\to1}$",
+    xy=(lower_threshold_beta2, 0.75),
+    xycoords=("data", "axes fraction"),
+    xytext=(25, 0),
+    textcoords="offset points",
+    ha="center",
+    va="top",
+    fontsize=fontsize_ticks,
 )
 plt.axvline(
     upper_threshold_beta2,
     color="grey",
     linestyle="dotted",
-    label=r"$R_{0,2}^{1\to2}$",
+    # label=r"$R_{0,2}^{1\to2}$",
 )
-plt.xlabel(r"Transmission rate $\beta_2$")
-plt.ylabel("Compartment size")
-plt.legend()
-plt.grid()
-plt.tight_layout()
+plt.annotate(
+    r"$R_{0,2}^{1\to2}$",
+    xy=(upper_threshold_beta2, 0.75),
+    xycoords=("data", "axes fraction"),
+    xytext=(-25, 0),
+    textcoords="offset points",
+    ha="center",
+    va="top",
+    fontsize=fontsize_ticks,
+)
+plt.xlabel(r"Transmission rate $\beta_2$", fontsize=fontsize_text)
+plt.ylabel("Compartment size", fontsize=fontsize_text)
+plt.xticks(fontsize=fontsize_ticks)
+plt.yticks(fontsize=fontsize_ticks)
+fig.legend(
+    fontsize=fontsize_ticks,
+    loc="upper center",
+    bbox_to_anchor=(0.5, -0.05),
+    ncol=2,
+    title="Protected against",
+    title_fontproperties={
+        "size": fontsize_ticks,
+        "weight": "bold",
+    },
+)
+plt.grid(alpha=alpha_grid)
 plt.savefig(
-    f"{folder}/Endemic_equilibrium_p_sensitivity_r02.{fileformat}", dpi=dpi
+    f"{folder}/endemic_equilibrium_p_sensitivity_r02.{fileformat}",
+    dpi=dpi,
+    bbox_inches="tight",
 )
 plt.show()
+plt.close()
 
 
-### STEP 8: Plot sensitivity of i_1, i_2 on beta_2
+# ### STEP 8: Plot sensitivity of i_1, i_2 on beta_2
 
+fig = plt.figure()
 plt.plot(
     beta_2s_line,
     i_solutions.T,
-    label=[r"$i_1$", r"$i_2$"],
+    label=[r"$I_1$", r"$I_2$"],
 )
 plt.axvline(
     lower_threshold_beta2,
     color="grey",
     linestyle="dashed",
-    label=r"$R_{0,2}^{2\to1}$",
+    # label=r"$R_{0,2}^{2\to1}$",
 )
+plt.annotate(
+    r"$R_{0,2}^{2\to1}$",
+    xy=(lower_threshold_beta2, 0.9),
+    xycoords=("data", "axes fraction"),
+    xytext=(25, 0),
+    textcoords="offset points",
+    ha="center",
+    va="top",
+    fontsize=fontsize_ticks,
+)
+
 plt.axvline(
     upper_threshold_beta2,
     color="grey",
     linestyle="dotted",
-    label=r"$R_{0,2}^{1\to2}$",
+    # label=r"$R_{0,2}^{1\to2}$",
 )
-plt.xlabel(r"Transmission rate $\beta_2$")
-plt.ylabel("Compartment size")
-plt.legend()
-plt.grid()
-plt.tight_layout()
+plt.annotate(
+    r"$R_{0,2}^{1\to2}$",
+    xy=(upper_threshold_beta2, 0.28),
+    xycoords=("data", "axes fraction"),
+    xytext=(-25, 0),
+    textcoords="offset points",
+    ha="center",
+    va="top",
+    fontsize=fontsize_ticks,
+)
+plt.xlabel(r"Transmission rate $\beta_2$", fontsize=fontsize_text)
+plt.ylabel("Compartment size", fontsize=fontsize_text)
+plt.xticks(fontsize=fontsize_ticks)
+plt.yticks(fontsize=fontsize_ticks)
+plt.legend(fontsize=fontsize_ticks)
+plt.grid(alpha=alpha_grid)
 plt.savefig(
-    f"{folder}/Endemic_equilibrium_i_sensitivity_r02.{fileformat}", dpi=dpi
+    f"{folder}/endemic_equilibrium_i_sensitivity_r02.{fileformat}",
+    dpi=dpi,
+    bbox_inches="tight",
 )
 plt.show()
+plt.close()
 
 
 ### STEP 9: Plot sensitivity of i_1, i_2 on sigma for multiple beta_2
 
 sigmas = np.linspace(0, 1, 11)
 beta_2s = [0.2, 0.25, 0.3, 0.35, 0.45, 0.55]
-plt.figure(figsize=(5, 5))
+fig = plt.figure(figsize=(5, 5))
 
 # Compute and plot variant 1 equilibrium
 sol = root(
@@ -360,12 +575,13 @@ for b_2 in beta_2s:
             sol.x[0],
             sol.x[1],
             "o",
-            label=(rf"$\sigma={round(s, 1)}$" if b_2 == 0.2 else None),
+            label=(rf"${round(s, 1)}$" if b_2 == 0.2 else None),
         )
         plt.text(
             sol.x[0] + 0.004,
             sol.x[1] - 0.0007,
             rf"$\beta_2={round(b_2, 2)}$" if s == 0 else "",
+            fontsize=fontsize_ticks,
         )
 
     # Compute and plot two-variant equilibria for multiple sigma (line)
@@ -387,24 +603,44 @@ for b_2 in beta_2s:
     plt.plot(i_solutions[0], i_solutions[1], linestyle="dashed", color="black")
 
 # Label plot
-plt.ylim(bottom=-0.002)
-plt.xlabel("Infectious with variant 1")
-plt.ylabel("Infectious with variant 2")
-plt.legend()
-plt.grid()
-plt.tight_layout()
+plt.text(
+    0.027,
+    0.027,
+    r"$I_1+I_2=I_1^*$",
+    fontsize=fontsize_ticks,
+    ha="right",
+    va="top",
+)
+plt.xlabel(r"$I_1$", fontsize=fontsize_text)
+plt.ylabel(r"$I_2$", fontsize=fontsize_text)
+plt.xticks(fontsize=fontsize_ticks)
+plt.yticks(fontsize=fontsize_ticks)
+fig.legend(
+    fontsize=fontsize_ticks,
+    loc="upper center",
+    bbox_to_anchor=(0.5, -0.02),
+    ncol=3,
+    title=r"Cross-immunity $\mathbf{\sigma}$",
+    title_fontproperties={
+        "size": fontsize_ticks,
+        "weight": "bold",
+    },
+)
+plt.grid(alpha=alpha_grid)
 plt.savefig(
-    f"{folder}/Endemic_equilibrium_multisensitivity_sigma.{fileformat}",
+    f"{folder}/endemic_equilibrium_multisensitivity_sigma.{fileformat}",
     dpi=dpi,
+    bbox_inches="tight",
 )
 plt.show()
+plt.close()
 
 
 ### STEP 10: Plot sensitivity of i_1, i_2 on sigma for multiple beta_2
 
 sigmas = [0.7, 0.8, 0.9]
 beta_2s = np.linspace(0.2, 0.6, 9)
-plt.figure(figsize=(5, 5))
+fig = plt.figure(figsize=(5, 5))
 
 for s in sigmas:
     upper_threshold_beta2 = (gamma_2 + b) * critical_r01(r_01, s)
@@ -424,7 +660,7 @@ for s in sigmas:
             sol.x[0],
             sol.x[1],
             "o",
-            label=(rf"$\beta_2={round(b_2, 2)}$" if s == 0.7 else None),
+            label=(rf"${round(b_2, 2)}$" if s == 0.7 else None),
         )
 
     # Compute and plot two-variant equilibria for multiple beta_2 (line)
@@ -446,17 +682,33 @@ for s in sigmas:
     plt.plot(i_solutions[0], i_solutions[1], linestyle="dashed", color="black")
 
 # Label plot
-plt.text(0.001, 0.0525, r"$\sigma=0.9$")
-plt.text(-0.005, 0.0725, r"$\sigma=0.8$")
-plt.text(0.025, 0.0525, r"$\sigma=0.7$")
+plt.text(0.0005, 0.0450, r"$\sigma=0.9$", fontsize=fontsize_ticks)
+plt.text(-0.006, 0.072, r"$\sigma=0.8$", fontsize=fontsize_ticks)
+plt.text(0.025, 0.0525, r"$\sigma=0.7$", fontsize=fontsize_ticks)
+plt.text(0.010, 0.022, r"$I_1=I_2$", fontsize=fontsize_ticks)
 
 plt.plot(i1_line, i1_line, color="black", linestyle="dashed", alpha=0.4)
-plt.xlabel("Infectious with variant 1")
-plt.ylabel("Infectious with variant 2")
-plt.legend(loc="upper right")
-plt.grid()
-plt.tight_layout()
+plt.xlabel(r"$I_1$", fontsize=fontsize_text)
+plt.ylabel(r"$I_2$", fontsize=fontsize_text)
+plt.xticks(fontsize=fontsize_ticks)
+plt.yticks(fontsize=fontsize_ticks)
+fig.legend(
+    fontsize=fontsize_ticks,
+    loc="upper center",
+    bbox_to_anchor=(0.5, -0.02),
+    ncol=3,
+    title=r"Transmission rate $\mathbf{\beta_2}$",
+    title_fontproperties={
+        "size": fontsize_ticks,
+        "weight": "bold",
+    },
+)
+
+plt.grid(alpha=alpha_grid)
 plt.savefig(
-    f"{folder}/Endemic_equilibrium_multisensitivity_r02.{fileformat}", dpi=dpi
+    f"{folder}/endemic_equilibrium_multisensitivity_r02.{fileformat}",
+    dpi=dpi,
+    bbox_inches="tight",
 )
 plt.show()
+plt.close()

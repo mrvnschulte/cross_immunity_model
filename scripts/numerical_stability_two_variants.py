@@ -144,13 +144,20 @@ def check_initial_values(
     print("Maximal distance to x_star:", max(distances))
 
     # Plot distance between long-term simulation and computed equilibrium
+    plt.figure()
     plt.scatter(range(N_initial_values), distances)
-    plt.xlabel("Index of initial value")
-    plt.ylabel(r"Distance $||x(1000) - \bar x||$")
-    plt.tight_layout()
+    plt.xlabel("Index of initial value", fontsize=fontsize_text)
+    plt.ylabel(r"Distance $||x(1000) - \hat x||$", fontsize=fontsize_text)
+    plt.xticks(fontsize=fontsize_ticks)
+    plt.yticks(fontsize=fontsize_ticks)
+    plt.ticklabel_format(
+        axis="y", style="sci", scilimits=(0, 0), useMathText=True
+    )
+    plt.gca().yaxis.get_offset_text().set_fontsize(fontsize_ticks)
     if filename is not None:
-        plt.savefig(filename, dpi=dpi)
+        plt.savefig(filename, dpi=dpi, bbox_inches="tight")
     plt.show()
+    plt.close()
 
 
 def check_parameter_sets(
@@ -321,42 +328,73 @@ def check_parameter_sets(
 
     # Plot maximal distance between long-term simulation and computed
     # equilibrium
+    plt.figure()
     plt.scatter(
         [s["set"] for s in valid_stats], [s["max_dist"] for s in valid_stats]
     )
-    plt.xlabel("Index of parameter set")
-    plt.ylabel(rf"Maximal distance $||x({tf}) - \bar x||$")
-    plt.tight_layout()
+    plt.xlabel("Index of parameter set", fontsize=fontsize_text)
+    plt.ylabel(
+        f"Maximal distance\n$||x({tf}) - \\hat x||$", fontsize=fontsize_text
+    )
+    plt.xticks(fontsize=fontsize_ticks)
+    plt.yticks(fontsize=fontsize_ticks)
+    plt.ticklabel_format(
+        axis="y", style="sci", scilimits=(0, 0), useMathText=True
+    )
+    plt.gca().yaxis.get_offset_text().set_fontsize(fontsize_ticks)
     if filename is not None:
-        plt.savefig(f"{filename}_distance.jpg", dpi=dpi)
+        plt.savefig(
+            f"{filename}_distance.{fileformat}", dpi=dpi, bbox_inches="tight"
+        )
     plt.show()
+    plt.close()
 
     # Plot maximal real part of eigenvalues at computed equilibria
+    plt.figure()
     plt.scatter(
         [s["set"] for s in valid_stats], [s["max_eigval"] for s in valid_stats]
     )
     plt.axhline(color="grey", linestyle="dotted")
-    plt.xlabel("Index of parameter set")
-    plt.ylabel(r"Maximal real part of eigenvalues$")
-    plt.tight_layout()
+    plt.xlabel("Index of parameter set", fontsize=fontsize_text)
+    plt.ylabel("Maximal real part of\neigenvalues", fontsize=fontsize_text)
+    plt.xticks(fontsize=fontsize_ticks)
+    plt.yticks(fontsize=fontsize_ticks)
+    plt.ticklabel_format(
+        axis="y", style="sci", scilimits=(0, 0), useMathText=True
+    )
+    plt.gca().yaxis.get_offset_text().set_fontsize(fontsize_ticks)
     if filename is not None:
-        plt.savefig(f"{filename}_eigval.jpg", dpi=dpi)
+        plt.savefig(
+            f"{filename}_eigval.{fileformat}", dpi=dpi, bbox_inches="tight"
+        )
     plt.show()
+    plt.close()
 
     # Plot statistics of invasion reproduction numbers
+    plt.figure()
     max_val = max([min(s["r_012"], s["r_021"]) for s in valid_stats])
     bins = np.arange(1.0, max_val + 0.1, 0.1)
     plt.hist([min(s["r_012"], s["r_021"]) for s in valid_stats], bins=bins)
-    plt.xlabel("Lower invasion reproduction number")
-    plt.ylabel("Number of parameter sets")
-    plt.tight_layout()
+    plt.xlabel(r"$\min\{R_{0,1\to 2},R_{0,2\to 1}\}$", fontsize=fontsize_text)
+    plt.ylabel("Number of\nparameter sets", fontsize=fontsize_text)
+    plt.xticks(fontsize=fontsize_ticks)
+    plt.yticks(fontsize=fontsize_ticks)
     if filename is not None:
-        plt.savefig(f"{filename}_stats.jpg", dpi=dpi)
+        plt.savefig(
+            f"{filename}_stats.{fileformat}", dpi=dpi, bbox_inches="tight"
+        )
     plt.show()
+    plt.close()
 
     total_max_real_part = max([s["max_eigval"] for s in valid_stats])
     print(f"The maximal real part of any eigenvalue is: {total_max_real_part}")
 
+
+dpi = 1200
+fontsize_text = 20
+fontsize_ticks = 16
+folder = "../plots"
+fileformat = "jpg"
 
 ### STEP 1: Check for given parameters and multiple initial values
 
@@ -372,8 +410,7 @@ tf = 1000
 
 # Set plot options and seed
 seed = 42
-filename = "../plots/Different_initial_values_distance.jpg"
-dpi = 500
+filename = f"{folder}/different_initial_values_distance.{fileformat}"
 verbose_step = N_initial_values / 100
 
 check_initial_values(
@@ -398,9 +435,8 @@ check_initial_values(
 N_target_sets = 1000
 N_initial_values = 100
 threshold_r0 = 1
-filename = "../plots/Different_parameters"
+filename = f"{folder}/different_parameters"
 tf = 5000
-dpi = 500
 seed = 42
 
 check_parameter_sets(
