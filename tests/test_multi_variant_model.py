@@ -14,8 +14,12 @@ from cross_immunity_model.multi_variant_model import (
     multi_variant_model,
     multi_variant_model_for_loops,
     multi_variant_model_with_matrices,
+    multi_variant_model_sparse,
 )
-from cross_immunity_model.matrices import construct_matrices
+from cross_immunity_model.matrices import (
+    construct_matrices,
+    construct_sparse_operators,
+)
 
 
 # ──────────────────────────────────────────
@@ -100,6 +104,18 @@ def matrices_n1(params_n1):
 def matrices_n2(params_n2):
     _, gamma, sigma, _ = params_n2
     return construct_matrices(gamma, sigma)
+
+
+@pytest.fixture
+def sparse_operators_n1(params_n1):
+    _, gamma, sigma, _ = params_n1
+    return construct_sparse_operators(gamma, sigma)
+
+
+@pytest.fixture
+def sparse_operators_n2(params_n2):
+    _, gamma, sigma, _ = params_n2
+    return construct_sparse_operators(gamma, sigma)
 
 
 # ──────────────────────────────────────────
@@ -618,3 +634,308 @@ class TestMultiVariantModelWithMatrices:
             compute_dn=True,
         )
         npt.assert_array_almost_equal(dx_base, dx_ext[:9])
+
+
+# ──────────────────────────────────────────
+# multi_variant_model_sparse
+# ──────────────────────────────────────────
+
+
+class TestMultiVariantModelSparse:
+
+    def test_output_shape_n1(
+        self,
+        state_n1_mixed,
+        params_n1,
+        sparse_operators_n1,
+    ):
+        beta, _, _, b = params_n1
+
+        dx = multi_variant_model_sparse(
+            0.0,
+            state_n1_mixed,
+            beta,
+            sparse_operators_n1,
+            b,
+        )
+
+        assert dx.shape == (3,)
+
+    def test_output_shape_n2(
+        self,
+        state_n2_mixed,
+        params_n2,
+        sparse_operators_n2,
+    ):
+        beta, _, _, b = params_n2
+
+        dx = multi_variant_model_sparse(
+            0.0,
+            state_n2_mixed,
+            beta,
+            sparse_operators_n2,
+            b,
+        )
+
+        assert dx.shape == (9,)
+
+    def test_returns_ndarray(
+        self,
+        state_n1_mixed,
+        params_n1,
+        sparse_operators_n1,
+    ):
+        beta, _, _, b = params_n1
+
+        result = multi_variant_model_sparse(
+            0.0,
+            state_n1_mixed,
+            beta,
+            sparse_operators_n1,
+            b,
+        )
+
+        assert isinstance(result, np.ndarray)
+
+    def test_t_is_unused(
+        self,
+        state_n1_mixed,
+        params_n1,
+        sparse_operators_n1,
+    ):
+        beta, _, _, b = params_n1
+
+        dx0 = multi_variant_model_sparse(
+            0.0,
+            state_n1_mixed,
+            beta,
+            sparse_operators_n1,
+            b,
+        )
+        dx99 = multi_variant_model_sparse(
+            99.0,
+            state_n1_mixed,
+            beta,
+            sparse_operators_n1,
+            b,
+        )
+
+        npt.assert_array_equal(dx0, dx99)
+
+    def test_known_values_n1(
+        self,
+        state_n1_mixed,
+        params_n1,
+        sparse_operators_n1,
+    ):
+        beta, _, _, b = params_n1
+
+        dx = multi_variant_model_sparse(
+            0.0,
+            state_n1_mixed,
+            beta,
+            sparse_operators_n1,
+            b,
+        )
+
+        npt.assert_array_almost_equal(dx, [-0.021, 0.01, 0.011])
+
+    @pytest.mark.parametrize("b", [0.0, 0.01])
+    def test_mass_conservation_n1(
+        self,
+        state_n1_mixed,
+        params_n1,
+        sparse_operators_n1,
+        b,
+    ):
+        beta, _, _, _ = params_n1
+
+        dx = multi_variant_model_sparse(
+            0.0,
+            state_n1_mixed,
+            beta,
+            sparse_operators_n1,
+            b,
+        )
+
+        npt.assert_almost_equal(dx.sum(), 0.0, decimal=12)
+
+    @pytest.mark.parametrize("b", [0.0, 0.01])
+    def test_mass_conservation_n2(
+        self,
+        state_n2_mixed,
+        params_n2,
+        sparse_operators_n2,
+        b,
+    ):
+        beta, _, _, _ = params_n2
+
+        dx = multi_variant_model_sparse(
+            0.0,
+            state_n2_mixed,
+            beta,
+            sparse_operators_n2,
+            b,
+        )
+
+        npt.assert_almost_equal(dx.sum(), 0.0, decimal=12)
+
+    def test_disease_free_equilibrium_n1(
+        self,
+        state_n1_disease_free,
+        params_n1,
+        sparse_operators_n1,
+    ):
+        beta, _, _, _ = params_n1
+
+        dx = multi_variant_model_sparse(
+            0.0,
+            state_n1_disease_free,
+            beta,
+            sparse_operators_n1,
+            b=0.05,
+        )
+
+        npt.assert_array_almost_equal(dx, np.zeros(3))
+
+    def test_disease_free_equilibrium_n2(
+        self,
+        state_n2_disease_free,
+        params_n2,
+        sparse_operators_n2,
+    ):
+        beta, _, _, _ = params_n2
+
+        dx = multi_variant_model_sparse(
+            0.0,
+            state_n2_disease_free,
+            beta,
+            sparse_operators_n2,
+            b=0.05,
+        )
+
+        npt.assert_array_almost_equal(dx, np.zeros(9))
+
+    @pytest.mark.parametrize("b", [0.0, 0.01])
+    def test_matches_dense_implementation_n1(
+        self,
+        state_n1_mixed,
+        params_n1,
+        matrices_n1,
+        sparse_operators_n1,
+        b,
+    ):
+        beta, gamma, sigma, _ = params_n1
+        V, G, T, S = matrices_n1
+
+        dx_dense = multi_variant_model_with_matrices(
+            0.0,
+            state_n1_mixed,
+            beta,
+            gamma,
+            sigma,
+            V,
+            G,
+            T,
+            S,
+            b,
+        )
+        dx_sparse = multi_variant_model_sparse(
+            0.0,
+            state_n1_mixed,
+            beta,
+            sparse_operators_n1,
+            b,
+        )
+
+        npt.assert_allclose(
+            dx_sparse,
+            dx_dense,
+            rtol=1e-12,
+            atol=1e-14,
+        )
+
+    @pytest.mark.parametrize("b", [0.0, 0.01])
+    def test_matches_dense_implementation_n2(
+        self,
+        state_n2_mixed,
+        params_n2,
+        matrices_n2,
+        sparse_operators_n2,
+        b,
+    ):
+        beta, gamma, sigma, _ = params_n2
+        V, G, T, S = matrices_n2
+
+        dx_dense = multi_variant_model_with_matrices(
+            0.0,
+            state_n2_mixed,
+            beta,
+            gamma,
+            sigma,
+            V,
+            G,
+            T,
+            S,
+            b,
+        )
+        dx_sparse = multi_variant_model_sparse(
+            0.0,
+            state_n2_mixed,
+            beta,
+            sparse_operators_n2,
+            b,
+        )
+
+        npt.assert_allclose(
+            dx_sparse,
+            dx_dense,
+            rtol=1e-12,
+            atol=1e-14,
+        )
+
+    def test_matches_dense_implementation_n3_with_asymmetric_sigma(self):
+        rng = np.random.default_rng(42)
+        n = 3
+
+        beta = np.array([0.21, 0.26, 0.18])
+        gamma = np.array([0.10, 0.12, 0.08])
+        sigma = np.array(
+            [
+                [1.0, 0.25, 0.70],
+                [0.40, 1.0, 0.10],
+                [0.65, 0.85, 1.0],
+            ]
+        )
+        b = 0.001
+        x = rng.dirichlet(np.ones(3**n))
+
+        V, G, T, S = construct_matrices(gamma, sigma)
+        sparse_operators = construct_sparse_operators(gamma, sigma)
+
+        dx_dense = multi_variant_model_with_matrices(
+            0.0,
+            x,
+            beta,
+            gamma,
+            sigma,
+            V,
+            G,
+            T,
+            S,
+            b,
+        )
+        dx_sparse = multi_variant_model_sparse(
+            0.0,
+            x,
+            beta,
+            sparse_operators,
+            b,
+        )
+
+        npt.assert_allclose(
+            dx_sparse,
+            dx_dense,
+            rtol=1e-12,
+            atol=1e-14,
+        )

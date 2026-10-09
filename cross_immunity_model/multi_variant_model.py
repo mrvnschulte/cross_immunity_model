@@ -9,6 +9,7 @@ from .matrices import (
     compute_gamma_matrix,
     construct_transition_matrix,
     shift_matrix,
+    SparseModelOperators,
     variant_in_set_matrix,
 )
 from .model_transformations import (
@@ -293,3 +294,54 @@ def multi_variant_model_with_matrices(
         dx = np.append(dx, dn)
 
     return dx
+
+
+def multi_variant_model_sparse(
+    t: float,
+    x: ArrayLike,
+    beta: ArrayLike,
+    operators: SparseModelOperators,
+    b: float = 0.0,
+) -> np.ndarray:
+    """
+    Numerical multi-variant model using sparse transition matrices.
+
+    gamma and sigma are contained in operators and must remain unchanged
+    during integration.
+    """
+    beta = np.asarray(beta, dtype=float)
+
+    I = map_x_to_I(x)
+
+    # Equivalent to V @ I @ 1, but avoids an unnecessary matrix product
+    I_variant = operators.V @ I.sum(axis=1)
+
+    transmission_vector = beta * I_variant
+    beta_sum = (~operators.V).T @ transmission_vector
+
+    # Losses due to recovery, infection, and demographics
+    dI = -I * (
+        operators.gamma_sum[:, np.newaxis] + beta_sum[np.newaxis, :] + b
+    )
+
+    for k in range(len(beta)):
+        source_rows = operators.source_rows[k]
+        target_rows = operators.target_rows[k]
+
+        # Equivalent to the dense term G @ I:
+        # recovery removes variant k from the infectious-set row
+        dI[source_rows, :] += operators.gamma[k] * I[target_rows, :]
+
+        # Equivalent to:
+        # S[k] @ I @ (transmission_vector[k] * T[k])
+        #
+        # (T[k].T @ I[source].T).T equals I[source] @ T[k]
+        incoming = np.asarray(
+            operators.transition_transposes[k] @ I[source_rows, :].T
+        ).T
+
+        dI[target_rows, :] += transmission_vector[k] * incoming
+
+    dI[0, 0] += b
+
+    return map_I_to_x(dI)

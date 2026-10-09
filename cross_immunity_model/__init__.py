@@ -18,6 +18,7 @@ from .invasion_reproduction_number import (
 from .matrices import (
     compute_gamma_matrix,
     construct_matrices,
+    construct_sparse_operators,
     construct_transition_matrix,
     shift_matrix,
     variant_in_set_matrix,
@@ -39,6 +40,7 @@ from .multi_variant_equilibrium_equations import (
 from .multi_variant_model import (
     multi_variant_model,
     multi_variant_model_for_loops,
+    multi_variant_model_sparse,
     multi_variant_model_with_matrices,
 )
 from .random_parameters import sample_random_parameters, random_simplex_points
@@ -69,6 +71,7 @@ __all__ = [
     "check_validity",
     "compute_gamma_matrix",
     "construct_matrices",
+    "construct_sparse_operators",
     "construct_transition_matrix",
     "create_initial_conditions_from_seroprevalence",
     "critical_r01",
@@ -91,6 +94,7 @@ __all__ = [
     "multi_variant_equilibrium_equation",
     "multi_variant_model",
     "multi_variant_model_for_loops",
+    "multi_variant_model_sparse",
     "multi_variant_model_with_matrices",
     "number_of_variants",
     "protected_1",

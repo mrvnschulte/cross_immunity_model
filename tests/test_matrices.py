@@ -5,6 +5,7 @@ Tests for matrices.py
 import numpy as np
 import numpy.testing as npt
 import pytest
+from scipy.sparse import csr_matrix
 
 from cross_immunity_model.matrices import (
     variant_in_set_matrix,
@@ -12,6 +13,9 @@ from cross_immunity_model.matrices import (
     construct_transition_matrix,
     shift_matrix,
     construct_matrices,
+    SparseModelOperators,
+    construct_sparse_transition_matrices,
+    construct_sparse_operators,
 )
 
 # ──────────────────────────────────────────
@@ -296,3 +300,175 @@ class TestConstructMatrices:
         _, G, T, _ = construct_matrices(gamma, sigma, dtype=np.float32)
         assert G.dtype == np.float32
         assert T.dtype == np.float32
+
+
+# ──────────────────────────────────────────
+# construct_sparse_transition_matrices
+# ──────────────────────────────────────────
+
+
+class TestConstructSparseTransitionMatrices:
+
+    @pytest.mark.parametrize(
+        "sigma",
+        [
+            np.array([[0.6]]),
+            np.array(
+                [
+                    [1.0, 0.25],
+                    [0.75, 1.0],
+                ]
+            ),
+            np.array(
+                [
+                    [1.0, 0.0, 0.6],
+                    [0.2, 1.0, 1.0],
+                    [0.8, 0.4, 1.0],
+                ]
+            ),
+        ],
+        ids=["n1", "n2", "n3"],
+    )
+    def test_matches_dense_transition_matrices(self, sigma):
+        n = sigma.shape[0]
+        size = 2**n
+
+        dense_transitions = construct_transition_matrix(sigma)
+        sparse_transitions = construct_sparse_transition_matrices(sigma)
+
+        assert isinstance(sparse_transitions, tuple)
+        assert len(sparse_transitions) == n
+
+        for k, transition in enumerate(sparse_transitions):
+            assert isinstance(transition, csr_matrix)
+            assert transition.shape == (size, size)
+            assert np.all(transition.data != 0.0)
+
+            npt.assert_allclose(
+                transition.toarray(),
+                dense_transitions[k],
+                rtol=1e-12,
+                atol=1e-14,
+            )
+
+    def test_rows_with_variant_already_present_are_zero(self):
+        sigma = np.array(
+            [
+                [1.0, 0.3, 0.6],
+                [0.4, 1.0, 0.2],
+                [0.7, 0.5, 1.0],
+            ]
+        )
+        transitions = construct_sparse_transition_matrices(sigma)
+        states = np.arange(2 ** len(sigma))
+
+        for k, transition in enumerate(transitions):
+            bit = 1 << k
+            rows_with_variant = states[(states & bit) != 0]
+
+            assert transition[rows_with_variant, :].nnz == 0
+
+    @pytest.mark.parametrize(
+        "sigma",
+        [
+            np.array([0.2, 0.3]),
+            np.ones((2, 3)),
+        ],
+    )
+    def test_raises_value_error_for_non_square_sigma(self, sigma):
+        with pytest.raises(ValueError, match="square matrix"):
+            construct_sparse_transition_matrices(sigma)
+
+
+# ──────────────────────────────────────────
+# construct_sparse_operators
+# ──────────────────────────────────────────
+
+
+class TestConstructSparseOperators:
+
+    def test_returns_expected_operator_data(self):
+        gamma = np.array([0.1, 0.12, 0.08])
+        sigma = np.array(
+            [
+                [1.0, 0.3, 0.6],
+                [0.4, 1.0, 0.2],
+                [0.7, 0.5, 1.0],
+            ]
+        )
+
+        operators = construct_sparse_operators(gamma, sigma)
+        n = len(gamma)
+        size = 2**n
+        expected_V = variant_in_set_matrix(n).astype(bool)
+
+        assert isinstance(operators, SparseModelOperators)
+        npt.assert_array_equal(operators.V, expected_V)
+        npt.assert_array_equal(operators.gamma, gamma)
+        npt.assert_allclose(
+            operators.gamma_sum,
+            expected_V.T @ gamma,
+        )
+
+        assert len(operators.source_rows) == n
+        assert len(operators.target_rows) == n
+        assert len(operators.transition_transposes) == n
+
+        states = np.arange(size)
+
+        for k in range(n):
+            bit = 1 << k
+            expected_source_rows = states[(states & bit) == 0]
+
+            npt.assert_array_equal(
+                operators.source_rows[k],
+                expected_source_rows,
+            )
+            npt.assert_array_equal(
+                operators.target_rows[k],
+                expected_source_rows | bit,
+            )
+
+            assert np.all((operators.source_rows[k] & bit) == 0)
+            assert np.all((operators.target_rows[k] & bit) != 0)
+            assert isinstance(
+                operators.transition_transposes[k],
+                csr_matrix,
+            )
+
+    def test_transition_transposes_match_dense_transition_matrices(self):
+        gamma = np.array([0.1, 0.12, 0.08])
+        sigma = np.array(
+            [
+                [1.0, 0.3, 0.6],
+                [0.4, 1.0, 0.2],
+                [0.7, 0.5, 1.0],
+            ]
+        )
+
+        dense_transitions = construct_transition_matrix(sigma)
+        operators = construct_sparse_operators(gamma, sigma)
+
+        for k, transition_transpose in enumerate(
+            operators.transition_transposes
+        ):
+            npt.assert_allclose(
+                transition_transpose.T.toarray(),
+                dense_transitions[k],
+                rtol=1e-12,
+                atol=1e-14,
+            )
+
+    def test_raises_value_error_for_empty_gamma(self):
+        with pytest.raises(ValueError, match="At least one variant"):
+            construct_sparse_operators(
+                np.array([]),
+                np.empty((0, 0)),
+            )
+
+    def test_raises_value_error_for_incompatible_sigma_shape(self):
+        with pytest.raises(ValueError, match="sigma must have shape"):
+            construct_sparse_operators(
+                np.array([0.1, 0.2]),
+                np.ones((3, 3)),
+            )
