@@ -19,7 +19,7 @@ from cross_immunity_model import (
 
 # Set parameters
 dpi = 1200
-fileformat = "jpg"
+fileformat = "pdf"
 folder = "../plots"
 alpha = 0.4
 fontsize_text = 20

@@ -394,7 +394,7 @@ dpi = 1200
 fontsize_text = 20
 fontsize_ticks = 16
 folder = "../plots"
-fileformat = "jpg"
+fileformat = "pdf"
 
 ### STEP 1: Check for given parameters and multiple initial values
 
@@ -409,25 +409,25 @@ N_initial_values = 100000
 tf = 1000
 
 # Set plot options and seed
-seed = 42
-filename = f"{folder}/different_initial_values_distance.{fileformat}"
-verbose_step = N_initial_values / 100
+# seed = 42
+# filename = f"{folder}/different_initial_values_distance_{N_initial_values}.{fileformat}"
+# verbose_step = N_initial_values / 100
 
-check_initial_values(
-    sigma,
-    beta_1,
-    beta_2,
-    gamma_1,
-    gamma_2,
-    b,
-    N_initial_values=N_initial_values,
-    tf=tf,
-    filename=filename,
-    verbose=True,
-    verbose_step=verbose_step,
-    seed=seed,
-    dpi=dpi,
-)
+# check_initial_values(
+#     sigma,
+#     beta_1,
+#     beta_2,
+#     gamma_1,
+#     gamma_2,
+#     b,
+#     N_initial_values=N_initial_values,
+#     tf=tf,
+#     filename=filename,
+#     verbose=True,
+#     verbose_step=verbose_step,
+#     seed=seed,
+#     dpi=dpi,
+# )
 
 
 ### STEP 2: Check for multiple parameter sets and initial values

@@ -31,7 +31,7 @@ from cross_immunity_model import x_bar
 
 dpi = 1200
 folder = "../plots"
-fileformat = "jpg"
+fileformat = "pdf"
 fontsize_text = 20
 fontsize_ticks = 16
 alpha_grid = 0.7

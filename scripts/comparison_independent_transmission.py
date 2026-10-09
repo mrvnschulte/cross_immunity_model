@@ -77,7 +77,7 @@ def two_variant_model_without_coinfection(
 
 
 dpi = 1200
-fileformat = "jpg"
+fileformat = "pdf"
 folder = "../plots"
 fontsize_text = 16
 fontsize_ticks = 14

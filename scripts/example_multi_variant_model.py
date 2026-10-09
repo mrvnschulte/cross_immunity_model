@@ -12,7 +12,7 @@ from cross_immunity_model import (
 )
 
 folder = "../plots"
-fileformat = "jpg"
+fileformat = "pdf"
 dpi = 1200
 fontsize_text = 16
 fontsize_ticks = 14

@@ -21,7 +21,7 @@ from cross_immunity_model import (
 
 # Variables for storing plots
 folder = "../plots"
-fileformat = "jpg"
+fileformat = "pdf"
 dpi = 1200
 fontsize_text = 20
 fontsize_ticks = 16
@@ -179,6 +179,7 @@ plt.xlabel(r"Cross-immunity $\sigma$", fontsize=fontsize_text)
 plt.ylabel("Compartment size", fontsize=fontsize_text)
 plt.xticks(fontsize=fontsize_ticks)
 plt.yticks(fontsize=fontsize_ticks)
+plt.xlim(sigmas_line[0], sigmas_line[-1])
 plt.ylim(bottom=1e-5, top=1)
 fig.legend(
     fontsize=fontsize_ticks,
@@ -227,6 +228,7 @@ plt.xlabel(r"Cross-immunity $\sigma$", fontsize=fontsize_text)
 plt.ylabel("Compartment size", fontsize=fontsize_text)
 plt.xticks(fontsize=fontsize_ticks)
 plt.yticks(fontsize=fontsize_ticks)
+plt.xlim(sigmas_line[0], sigmas_line[-1])
 fig.legend(
     fontsize=fontsize_ticks,
     loc="upper center",
@@ -276,6 +278,7 @@ plt.xlabel(r"Cross-immunity $\sigma$", fontsize=fontsize_text)
 plt.ylabel("Compartment size", fontsize=fontsize_text)
 plt.xticks(fontsize=fontsize_ticks)
 plt.yticks(fontsize=fontsize_ticks)
+plt.xlim(sigmas_line[0], sigmas_line[-1])
 plt.legend(fontsize=fontsize_ticks)
 plt.grid(alpha=alpha_grid)
 plt.savefig(
@@ -397,6 +400,7 @@ fig.legend(
     bbox_to_anchor=(0.5, -0.05),
     ncol=3,
 )
+plt.xlim(beta_2s_line[0], beta_2s_line[-1])
 plt.ylim(bottom=1e-5, top=1)
 plt.grid(alpha=alpha_grid)
 plt.savefig(
@@ -455,6 +459,7 @@ plt.xlabel(r"Transmission rate $\beta_2$", fontsize=fontsize_text)
 plt.ylabel("Compartment size", fontsize=fontsize_text)
 plt.xticks(fontsize=fontsize_ticks)
 plt.yticks(fontsize=fontsize_ticks)
+plt.xlim(beta_2s_line[0], beta_2s_line[-1])
 fig.legend(
     fontsize=fontsize_ticks,
     loc="upper center",
@@ -521,6 +526,7 @@ plt.xlabel(r"Transmission rate $\beta_2$", fontsize=fontsize_text)
 plt.ylabel("Compartment size", fontsize=fontsize_text)
 plt.xticks(fontsize=fontsize_ticks)
 plt.yticks(fontsize=fontsize_ticks)
+plt.xlim(beta_2s_line[0], beta_2s_line[-1])
 plt.legend(fontsize=fontsize_ticks)
 plt.grid(alpha=alpha_grid)
 plt.savefig(

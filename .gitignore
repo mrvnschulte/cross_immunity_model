@@ -3,3 +3,4 @@
 .coverage
 *.jpg
 __pycache__/
+*.pdf
