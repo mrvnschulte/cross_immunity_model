@@ -26,8 +26,10 @@ sigma_23 = np.linspace(0, 1, resolution)
 gamma = np.array([0.1, 0.1, 0.1])
 b = 0.01
 atol = 0
-filename = "../plots/Invasion_ability_third_variant.jpg"
-dpi = 500
+filename = "../plots/invasion_ability_third_variant.pdf"
+dpi = 1200
+fontsize_text = 20
+fontsize_ticks = 16
 plot_single_r0 = False
 verbose = True
 verbose_step = 10
@@ -97,13 +99,19 @@ for i in range(len(beta_3)):
 
 cmap = ListedColormap(["white", "blue", "green", "red"])
 legend_handles = [
-    Patch(color="white", label="Can invade 2 and 12"),
-    Patch(color="blue", label="Can invade 2, but not 12"),
-    Patch(color="green", label="Can invade 12, but not 2"),
+    Patch(
+        facecolor="white",
+        edgecolor="gray",
+        alpha=0.3,
+        linewidth=1.0,
+        label="Can invade {2} and {1, 2}",
+    ),
+    Patch(color="blue", label="Can invade {2}, but not {1, 2}"),
+    Patch(color="green", label="Can invade {1, 2}, but not {2}"),
     Patch(color="red", label="Can invade neither"),
 ]
 
-plt.figure(figsize=(8, 6))
+plt.figure()
 plt.imshow(
     colors,
     origin="lower",
@@ -113,11 +121,18 @@ plt.imshow(
     vmin=0,
     vmax=3,
 )
-plt.legend(handles=legend_handles, loc="upper left", frameon=True)
-plt.xlabel(r"$\sigma_{23}$")
-plt.ylabel(r"$\beta_3$")
+plt.legend(
+    handles=legend_handles,
+    loc="upper center",
+    bbox_to_anchor=(0.52, -0.2),
+    ncol=1,
+    fontsize=fontsize_ticks,
+)
+plt.xlabel(r"Cross-immunity $\sigma_{23}$", fontsize=fontsize_text)
+plt.ylabel(r"Transmission rate $\beta_3$", fontsize=fontsize_text)
+plt.xticks(fontsize=fontsize_ticks)
+plt.yticks(fontsize=fontsize_ticks)
 # plt.title("Invasion ability of the third variant")
-plt.tight_layout()
 if filename is not None:
-    plt.savefig(filename, dpi=dpi)
+    plt.savefig(filename, dpi=dpi, bbox_inches="tight")
 plt.show()

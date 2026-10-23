@@ -653,7 +653,7 @@ def find_stable_multi_variant_equilibrium(
                 I_variant_eq, beta, gamma, sigma, V, G, T, S, b
             )
             convergence = 1
-            return [], I_variant_eq, x_eq, convergence
+            return coexisting_variants, I_variant_eq, x_eq, convergence
         else:
             I_variant_guess = 0.1 * np.ones(n_variants)
             for subset in subsets_of(np.arange(n_variants)):
