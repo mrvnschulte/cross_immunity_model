@@ -132,7 +132,6 @@ plt.xlabel(r"Cross-immunity $\sigma_{23}$", fontsize=fontsize_text)
 plt.ylabel(r"Transmission rate $\beta_3$", fontsize=fontsize_text)
 plt.xticks(fontsize=fontsize_ticks)
 plt.yticks(fontsize=fontsize_ticks)
-# plt.title("Invasion ability of the third variant")
 if filename is not None:
     plt.savefig(filename, dpi=dpi, bbox_inches="tight")
 plt.show()

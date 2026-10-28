@@ -260,7 +260,8 @@ def check_stable_variants_algorithm(
         )
         if convergence != 1:
             print(
-                f"Note: For seed {i} a stable equilibrium has not been found, probably due to not finding the correct equilibrium"
+                f"Note: For seed {i} a stable equilibrium has not been found, "
+                "probably due to not finding the correct equilibrium"
             )
             if not compute_max_real_part:
                 continue
@@ -337,6 +338,7 @@ def check_stable_variants_algorithm(
     return max_real_parts, n_coexisting_variants
 
 
+# Plot settings
 dpi = 1200
 fontsize_text = 20
 fontsize_ticks = 16

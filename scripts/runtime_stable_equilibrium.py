@@ -31,11 +31,6 @@ from cross_immunity_model import (
 )
 
 
-# --------------------------------------------------------------------------- #
-# Simulation-based equilibrium finder
-# --------------------------------------------------------------------------- #
-
-
 def find_equilibrium_by_simulation(
     beta: np.ndarray,
     gamma: np.ndarray,
@@ -885,17 +880,10 @@ for means, mins, maxs, label, marker, color in (
         means_dist_ord,
         mins_dist_ord,
         maxs_dist_ord,
-        "Ordered search",
+        "Equation based",
         "o",
         "tab:blue",
     ),
-    # (
-    #     means_dist_unord,
-    #     mins_dist_unord,
-    #     maxs_dist_unord,
-    #     "find_stable (ordered=False)",
-    #     "s",
-    # ),
     *[
         (
             means_dsim[tol],

@@ -105,12 +105,10 @@ for sigma in sigmas:
     )
     plt.xlim(0, r01[-1])
     plt.ylim(0, r01[-1])
-    # plt.title(rf"Stability regions for $\sigma$={round(sigma, 2)}")
     plt.xticks(fontsize=fontsize_ticks)
     plt.yticks(fontsize=fontsize_ticks)
     plt.xlabel(r"$R_{0,1}$", fontsize=fontsize_text)
     plt.ylabel(r"$R_{0,2}$", fontsize=fontsize_text)
-    # plt.legend()
     plt.tight_layout()
     plt.savefig(
         f"{folder}/stability_region_sigma={round(sigma,2)}.{fileformat}",
@@ -137,10 +135,6 @@ for sigma in sigmas:
     plt.yticks(fontsize=fontsize_ticks)
     plt.xlabel(r"$R_{0,1}$", fontsize=fontsize_text)
     plt.ylabel(r"$R_{0,2}$", fontsize=fontsize_text)
-    # plt.title(
-    #     rf"Invasion reproduction number $R_{{0,1\to 2}}$ "
-    #     rf"for $\sigma={round(sigma, 2)}$"
-    # )
     plt.tight_layout()
     plt.savefig(
         f"{folder}/invasion_reproduction_number_sigma={round(sigma,2)}.{fileformat}",
@@ -347,7 +341,6 @@ r01s = np.linspace(1, 10, 1001)
 r02s = [1.5, 3, 4.5]
 
 fig = plt.figure()
-# plt.gca().set_prop_cycle(cycler(color=colors))
 for r02 in r02s:
     c_sigma = [critical_sigma(r01, r02) for r01 in r01s]
     plt.plot(r01s, c_sigma, label=rf"$R_{{0,2}}={r02}$")
@@ -433,7 +426,7 @@ fig = plt.figure()
 for sigma in sigmas:
     c_r01 = [critical_r01(r02, sigma) for r02 in r02s]
     plt.plot(r02s, c_r01, label=rf"$\sigma={sigma}$")
-    # plt.semilogy(r01s, c_r02, label=rf"$\sigma={sigma}$")
+
 fig.legend(
     fontsize=fontsize_text,
     loc="upper center",
@@ -461,7 +454,6 @@ fig = plt.figure()
 for r02 in r02s:
     c_r01 = [critical_r01(r02, sigma) for sigma in sigmas]
     plt.plot(sigmas, c_r01, label=rf"$R_{{0,2}}={r02}$")
-    # plt.semilogy(sigmas, c_r02, label=rf"$R_{{0,1}}={r01}$")
 
 fig.legend(
     fontsize=fontsize_text,
@@ -496,7 +488,6 @@ plt.xlabel(r"$\sigma$", fontsize=fontsize_text)
 plt.ylabel(r"$R_{0,2}$", fontsize=fontsize_text)
 plt.xticks(fontsize=fontsize_ticks)
 plt.yticks(fontsize=fontsize_ticks)
-# plt.title(r"Critical $R_0^1$")
 cbar = plt.colorbar(cr)
 cbar.set_label(r"$R_{0,1}^{2\to1}$", size=fontsize_text)
 cbar.ax.tick_params(labelsize=fontsize_ticks)
@@ -516,7 +507,6 @@ fig = plt.figure()
 for sigma in sigmas:
     c_r02 = [critical_r02(r01, sigma) for r01 in r01s]
     plt.plot(r01s, c_r02, label=rf"$\sigma={sigma}$")
-    # plt.semilogy(r01s, c_r02, label=rf"$\sigma={sigma}$")
 
 fig.legend(
     fontsize=fontsize_text,
@@ -544,7 +534,6 @@ fig = plt.figure()
 for r01 in r01s:
     c_r02 = [critical_r02(r01, sigma) for sigma in sigmas]
     plt.plot(sigmas, c_r02, label=rf"$R_{{0,1}}={r01}$")
-    # plt.semilogy(sigmas, c_r02, label=rf"$R_{{0,1}}={r01}$")
 
 fig.legend(
     fontsize=fontsize_text,
@@ -577,7 +566,6 @@ plt.xlabel(r"$\sigma$", fontsize=fontsize_text)
 plt.ylabel(r"$R_{0,1}$", fontsize=fontsize_text)
 plt.xticks(fontsize=fontsize_ticks)
 plt.yticks(fontsize=fontsize_ticks)
-# plt.title(r"Critical $R_0^1$")
 cbar = plt.colorbar(cr)
 cbar.set_label(r"$R_{0,2}^{2\to 1}$", size=fontsize_text)
 cbar.ax.tick_params(labelsize=fontsize_ticks)

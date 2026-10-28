@@ -81,6 +81,7 @@ fileformat = "pdf"
 folder = "../plots"
 fontsize_text = 16
 fontsize_ticks = 14
+alpha_grid = 0.7
 
 # Set model parameters
 infectious_at_start = 0.001
@@ -199,7 +200,7 @@ plt.xlim(t0, tf)
 plt.ylim(0, None)
 plt.xticks(fontsize=fontsize_ticks)
 plt.yticks(fontsize=fontsize_ticks)
-plt.grid(alpha=0.7)
+plt.grid(alpha=alpha_grid)
 plt.tight_layout()
 plt.savefig(
     f"{folder}/comparison_independent_transmission.{fileformat}",
@@ -287,7 +288,7 @@ plt.xlim(t0, tf)
 plt.ylim(0, 1)
 plt.xticks(fontsize=fontsize_ticks)
 plt.yticks(fontsize=fontsize_ticks)
-plt.grid(alpha=0.7)
+plt.grid(alpha=alpha_grid)
 plt.tight_layout()
 plt.savefig(
     f"{folder}/comparison_independent_transmission_recovered.{fileformat}",
