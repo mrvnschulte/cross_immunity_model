@@ -18,6 +18,7 @@ from cross_immunity_model import (
     multi_variant_model_for_loops,
     multi_variant_model_sparse,
     multi_variant_model_with_matrices,
+    sample_random_parameters,
 )
 
 
@@ -112,6 +113,12 @@ def measure_once(function) -> float:
 
 def build_base_params(
     n_variants: int,
+    beta_mean: float,
+    beta_std: float,
+    gamma_mean: float,
+    gamma_std: float,
+    sigma_alpha: float,
+    sigma_beta: float,
     rng: np.random.Generator,
     initial_nonzero_mass: float = 1e-3,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, float]:
@@ -122,6 +129,18 @@ def build_base_params(
     ----------
     n_variants : int
         Number of variants.
+    beta_mean : float
+        Mean of normal distribution for beta.
+    beta_std : float
+        Standard deviation of normal distribution for beta.
+    gamma_mean : float
+        Mean of normal distribution for gamma.
+    gamma_std : float
+        Standard deviation of normal distribution for gamma.
+    sigma_alpha : float
+        Shape parameter alpha of beta distribution for sigma.
+    sigma_beta : float
+        Shape parameter beta of beta distribution for sigma.
     rng : np.random.Generator
         Random number generator.
     initial_nonzero_mass : float
@@ -150,13 +169,17 @@ def build_base_params(
     x0[0] = 1.0 - initial_nonzero_mass
     x0[1:] = initial_nonzero_mass / (n_states - 1)
 
-    beta = rng.uniform(0.15, 0.3, size=n_variants)
-    gamma = np.full(n_variants, 0.1)
-    sigma = np.full((n_variants, n_variants), 0.8)
-    np.fill_diagonal(sigma, 1.0)
-    b = 0.001
+    beta, gamma, sigma = sample_random_parameters(
+        n_variants,
+        beta_mean,
+        beta_std,
+        gamma_mean,
+        gamma_std,
+        sigma_alpha,
+        sigma_beta,
+    )
 
-    return x0, beta, gamma, sigma, b
+    return x0, beta, gamma, sigma
 
 
 def save_runtime_data(
@@ -319,21 +342,29 @@ dpi = 1200
 fontsize_text = 20
 fontsize_ticks = 16
 alpha_grid = 0.7
-folder = "../plots"
+folder = "../plots_test"
 fileformat = "pdf"
-data_folder = "../data"
+data_folder = "../data_test"
 
 t0 = 0
 tf = 500
 n_repeats = 10
-n_variants_max = 7
+n_variants_max = 4
 # This benchmark only evaluates one RHS call and can therefore use more variants
-n_variants_max_function_call = 10
+n_variants_max_function_call = 4
+
+beta_mean = 0.3
+beta_std = 0.025
+gamma_mean = 0.1
+gamma_std = 0
+sigma_alpha = 9
+sigma_beta = 1
+b = 0.01
 
 seed = 42
 verbose = True
 
-recompute = False
+recompute = True
 
 RUNTIME_VALUE_COLUMNS = (
     "min_loops_s",
@@ -391,8 +422,14 @@ if recompute:
         for _ in range(n_repeats):
             # A new parameter set is created for every repeat. The same
             # parameter set is used by all four model formulations.
-            x0, beta, gamma, sigma, b = build_base_params(
+            x0, beta, gamma, sigma = build_base_params(
                 n_variants,
+                beta_mean,
+                beta_std,
+                gamma_mean,
+                gamma_std,
+                sigma_alpha,
+                sigma_beta,
                 rng,
             )
 
@@ -601,8 +638,14 @@ if recompute:
         for _ in range(n_repeats):
             # The same parameter set is used for all formulations in this
             # repeat.
-            x0, beta, gamma, sigma, b = build_base_params(
+            x0, beta, gamma, sigma = build_base_params(
                 n_variants,
+                beta_mean,
+                beta_std,
+                gamma_mean,
+                gamma_std,
+                sigma_alpha,
+                sigma_beta,
                 rng,
             )
 
