@@ -7,6 +7,12 @@ name = "cross_immunity_model"
 version = "1.0"
 description = "Generic multi-variant model for infectious diseases with partial cross-immunity"
 readme = "README.md"
+license = {text = "BSD-3-Clause"}
+
+classifiers = [
+    "License :: OSI Approved :: BSD License",
+]
+
 
 authors = [
     {name = "Marvin Schulte", email = "marvin.schulte@itwm.fraunhofer.de"}

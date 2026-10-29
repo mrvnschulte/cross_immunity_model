@@ -379,7 +379,7 @@ For a mathematical analysis of the underlying model, see:
 
 ## License
 
-tba
+This project is licensed under the [BSD 3-Clause License](LICENSE).
 
 ## Author
 

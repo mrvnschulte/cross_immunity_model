@@ -8,3 +8,4 @@ API documentation for the ``cross_immunity_model`` package.
    :caption: Contents:
 
    api/index
+   license
