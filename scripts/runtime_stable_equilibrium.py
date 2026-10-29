@@ -18,6 +18,7 @@ import time
 
 import matplotlib.pyplot as plt
 import numpy as np
+from numpy.typing import ArrayLike
 from scipy.integrate import solve_ivp
 
 from cross_immunity_model import (
@@ -32,9 +33,9 @@ from cross_immunity_model import (
 
 
 def find_equilibrium_by_simulation(
-    beta: np.ndarray,
-    gamma: np.ndarray,
-    sigma: np.ndarray,
+    beta: ArrayLike,
+    gamma: ArrayLike,
+    sigma: ArrayLike,
     V: np.ndarray,
     G: np.ndarray,
     T: np.ndarray,
@@ -51,8 +52,22 @@ def find_equilibrium_by_simulation(
 
     Parameters
     ----------
-    beta, gamma, sigma, V, G, T, S, b
-        Model parameters and pre-computed matrices.
+    beta : array-like
+        Vector of transmission rates of the variants.
+    gamma : array-like
+        Vector of recovery rates of the variants.
+    sigma : list of lists, or np.ndarray
+        Matrix of cross-immunity factors.
+    V : np.ndarray
+        Variant-in-set matrix.
+    G : np.ndarray
+        Gamma matrix.
+    T : np.ndarray
+        Transmission matrix.
+    S : np.ndarray
+        Shift matrix.
+    b : float
+        Natural death and birth rate.
     x0 : np.ndarray
         Initial condition.
     deriv_tol : float
@@ -169,18 +184,26 @@ def save_runtime_data(
         Path of the output CSV file.
     variants : list of int
         Numbers of variants included in the benchmark.
-    times_ordered, times_unordered : list of numpy.ndarray
-        Runtime measurements for the ordered and unordered equilibrium search.
+    times_ordered : list of numpy.ndarray
+        Runtime measurements for the ordered equilibrium search.
+    times_unordered : list of numpy.ndarray
+        Runtime measurements for the unordered equilibrium search.
     times_simulation : dict of float to list of numpy.ndarray
         Runtime measurements for each simulation tolerance.
     t_stops : dict of float to list of numpy.ndarray
         Simulation stopping times for each simulation tolerance.
-    errors_ordered, errors_unordered : list of numpy.ndarray
-        Errors of equilibrium-search results relative to the reference solution.
+    errors_ordered : list of numpy.ndarray
+        Errors of ordered search results relative to the reference solution.
+    errors_unordered : list of numpy.ndarray
+        Errors of unordered search results relative to the reference solution.
     errors_simulation : dict of float to list of numpy.ndarray
         Simulation errors relative to the reference solution.
-    inv_r0_dists_ordered, inv_r0_dists_unordered : list of numpy.ndarray
-        Maximum distances of invasion reproduction numbers from one.
+    inv_r0_dists_ordered : list of numpy.ndarray
+        Maximum distances of invasion reproduction numbers from one for ordered
+        search.
+    inv_r0_dists_unordered : list of numpy.ndarray
+        Maximum distances of invasion reproduction numbers from one for
+        unordered search.
     inv_r0_dists_simulation : dict of float to list of numpy.ndarray
         Maximum distances for simulations at each tolerance.
     deriv_tols : list of float
@@ -277,7 +300,10 @@ def load_runtime_data(
     Returns
     -------
     tuple
-        Benchmark results in the same structure used by the plotting code.
+        Benchmark results in the same structure used by the plotting code. It
+        is returned in the same order as the inout to the function
+        ``save_runtime_data``, but ``csv_filename``, ``variants`` and
+        ``deriv_tols`` are not returned.
 
     Raises
     ------
@@ -455,6 +481,7 @@ alpha_grid = 0.7
 data_folder = "../data"
 recompute = False
 runtime_csv_file = f"{data_folder}/runtime_stable_equilibrium_raw_results.csv"
+plot_error_to_reference = False
 
 
 # Parameter settings
@@ -828,49 +855,64 @@ plt.close()
 
 # Plot 3: accuracy vs reference solution
 
-# plt.figure()
+if plot_error_to_reference:
+    plt.figure()
 
-# for means, mins, maxs, label, marker in (
-#     (
-#         means_err_ord,
-#         mins_err_ord,
-#         maxs_err_ord,
-#         "find_stable (ordered=True)",
-#         "o",
-#     ),
-#     (
-#         means_err_unord,
-#         mins_err_unord,
-#         maxs_err_unord,
-#         "find_stable (ordered=False)",
-#         "s",
-#     ),
-#     *[
-#         (
-#             means_esim[tol],
-#             mins_esim[tol],
-#             maxs_esim[tol],
-#             f"Simulation (tol={tol:.0e})",
-#             m,
-#         )
-#         for tol, m in zip(deriv_tols, ["^", "v"])
-#     ],
-# ):
-#     (line,) = plt.plot(variants, means, label=label, marker=marker)
-#     plt.fill_between(variants, mins, maxs, alpha=0.2, color=line.get_color())
+    for means, mins, maxs, label, marker in (
+        (
+            means_err_ord,
+            mins_err_ord,
+            maxs_err_ord,
+            "find_stable (ordered=True)",
+            "o",
+        ),
+        (
+            means_err_unord,
+            mins_err_unord,
+            maxs_err_unord,
+            "find_stable (ordered=False)",
+            "s",
+        ),
+        *[
+            (
+                means_esim[tol],
+                mins_esim[tol],
+                maxs_esim[tol],
+                f"Simulation (tol={tol:.0e})",
+                m,
+            )
+            for tol, m in zip(deriv_tols, ["^", "v"])
+        ],
+    ):
+        (line,) = plt.plot(variants, means, label=label, marker=marker)
+        plt.fill_between(
+            variants, mins, maxs, alpha=0.2, color=line.get_color()
+        )
 
-# plt.xlabel("Number of variants")
-# plt.ylabel(
-#     r"Mean maximal error in $\mathrm{I}_\mathrm{variant}$"
-#     f" (N={N_parameters})"
-# )
-# plt.yscale("log")
-# plt.legend()
-# plt.grid(True)
-# plt.tight_layout()
-# if savefig:
-#     plt.savefig("../plots/runtime_accuracy.jpg", dpi=dpi)
-# plt.show()
+    plt.xlabel("Number of variants", fontsize=fontsize_text)
+    plt.ylabel(
+        r"Mean maximal error in $\mathrm{I}_\mathrm{variant}$"
+        f" (N={N_parameters})",
+        fontsize=fontsize_text,
+    )
+    plt.xticks(fontsize=fontsize_ticks)
+    plt.yticks(fontsize=fontsize_ticks)
+    plt.yscale("log")
+    plt.legend(
+        fontsize=fontsize_ticks,
+        loc="upper center",
+        bbox_to_anchor=(0.4, -0.2),
+        ncol=2,
+    )
+    plt.grid(True, alpha=alpha_grid)
+    if savefig:
+        plt.savefig(
+            "{plot_folder}/runtime_accuracy.{fileformat}",
+            dpi=dpi,
+            bbox_inches="tight",
+        )
+    plt.show()
+    plt.close()
 
 # Plot 4: max |R_inv - 1| of coexisting variants
 plt.figure()

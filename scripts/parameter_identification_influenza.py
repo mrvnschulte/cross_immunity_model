@@ -53,13 +53,25 @@ from cross_immunity_model import (
 )
 
 
-# =============================================================================
-# Data handling
-# =============================================================================
+### Data handling
 
 
 def epidemiological_week_date(year: int, week: int) -> pd.Timestamp:
-    """Return the Monday of an ISO epidemiological week."""
+    """
+    Returns the Monday corresponding to an ISO epidemiological week.
+
+    Parameters
+    ----------
+    year : int
+        ISO week-numbering year.
+    week : int
+        ISO week number in the range from 1 to 53.
+
+    Returns
+    -------
+    pd.Timestamp
+        Timestamp of the Monday of the specified ISO epidemiological week.
+    """
     return pd.Timestamp(date.fromisocalendar(int(year), int(week), 1))
 
 
@@ -69,14 +81,38 @@ def read_and_filter_weekly_cases(
     flu_season: str,
 ) -> pd.DataFrame:
     """
-    Read strain-specific influenza case estimates and retain November through May.
+    Reads strain-specific weekly influenza case estimates and restricts them
+    to the period from November through May.
 
-    The input file must contain:
-    - year
-    - week
-    - calendar_week
-    - estimated_cases
-    - one column for every entry in variants
+    The input file must contain the columns ``year``, ``week``,
+    ``calendar_week``, ``estimated_cases``, and one column for every variant
+    in ``variants``.
+
+    Parameters
+    ----------
+    filename : str or pathlib.Path
+        Path to the CSV file containing weekly influenza case estimates.
+    variants : list of str
+        Names of influenza variants. Each name must correspond to a column in
+        the input file containing strain-specific estimated case counts.
+    flu_season : str
+        Influenza season in the format ``"YYYY-YYYY"``, for example
+        ``"2017-2018"``. The first year determines the start of the fitting
+        period in November.
+
+    Returns
+    -------
+    pd.DataFrame
+        Weekly case data sorted by ISO year and week, with an additional
+        ``date`` column containing the Monday of each epidemiological week.
+        Only observations between 1 November of the first season year and
+        31 May of the following year are retained.
+
+    Raises
+    ------
+    ValueError
+        If required columns are missing, strain-specific case counts contain
+        missing or negative values, or no observations remain after filtering.
     """
     data = pd.read_csv(filename)
 
@@ -135,9 +171,7 @@ def read_and_filter_weekly_cases(
     return data
 
 
-# =============================================================================
-# Cross-immunity matrix
-# =============================================================================
+### Cross-immunity matrix from flat parameter vector
 
 
 def params_to_sigma(
@@ -145,16 +179,34 @@ def params_to_sigma(
     n_variants: int,
 ) -> np.ndarray:
     """
-    Construct a symmetric cross-immunity matrix from upper-triangular values.
+    Constructs a symmetric cross-immunity matrix from a flat vector of
+    upper-triangular off-diagonal entries.
 
-    For four variants, the parameter order is:
+    The parameter order follows the upper triangle of the matrix row by row.
+    For four variants, the order is ``sigma_12``, ``sigma_13``,
+    ``sigma_14``, ``sigma_23``, ``sigma_24``, and ``sigma_34``.
 
-    - sigma_12: A(H1N1) <-> A(H3)
-    - sigma_13: A(H1N1) <-> B/Victoria
-    - sigma_14: A(H1N1) <-> B/Yamagata
-    - sigma_23: A(H3) <-> B/Victoria
-    - sigma_24: A(H3) <-> B/Yamagata
-    - sigma_34: B/Victoria <-> B/Yamagata
+    Parameters
+    ----------
+    sigma_params : np.ndarray or list of float
+        Cross-immunity values for the upper-triangular off-diagonal entries.
+        Must contain ``n_variants * (n_variants - 1) // 2`` values, each in
+        the interval [0, 1].
+    n_variants : int
+        Number of influenza variants and therefore the dimension of the
+        resulting cross-immunity matrix.
+
+    Returns
+    -------
+    sigma : np.ndarray
+        Symmetric cross-immunity matrix of shape
+        ``(n_variants, n_variants)``. Diagonal entries are equal to 1.
+
+    Raises
+    ------
+    ValueError
+        If the number of supplied cross-immunity parameters is incorrect or
+        any parameter lies outside the interval [0, 1].
     """
     sigma_params = np.asarray(sigma_params, dtype=float)
 
@@ -182,9 +234,7 @@ def params_to_sigma(
     return sigma
 
 
-# =============================================================================
-# Model simulation
-# =============================================================================
+### Model simulation
 
 
 def run_model_weekly_cases(
@@ -200,15 +250,56 @@ def run_model_weekly_cases(
     b: float,
 ) -> np.ndarray:
     """
-    Run the multi-variant model and return weekly symptomatic case estimates.
+    Simulates the multi-variant model and returns weekly symptomatic case
+    estimates for each variant.
 
-    The ODE model computes all infection events. The shared symptomatic_rate
-    converts modelled infections to observed estimated influenza cases.
+    The model is integrated with daily output. Cumulative infection counters
+    are sampled at weekly intervals, converted to absolute infection counts,
+    and multiplied by ``symptomatic_rate``.
+
+    Parameters
+    ----------
+    beta : np.ndarray
+        Vector of transmission rates, with one entry per variant.
+    gamma : np.ndarray
+        Vector of recovery rates, with one entry per variant. Must have the
+        same length as ``beta``.
+    sigma : np.ndarray
+        Cross-immunity matrix of shape ``(n_variants, n_variants)``.
+    infectious_at_start : np.ndarray
+        Initial infectious fractions for all variants. Must have the same
+        length as ``beta`` and contain no negative values.
+    fraction_antibodies : float
+        Fraction of the population with antibodies at the start of the
+        simulation. Must lie in the interval [0, 1].
+    antibody_effectiveness : np.ndarray
+        Protection probabilities against each variant for individuals with
+        antibodies. Must have the same length as ``beta``; all entries must
+        lie in the interval [0, 1].
+    symptomatic_rate : float
+        Shared proportion of modelled infection events that are interpreted
+        as symptomatic cases. Must lie in [0, 1].
+    n_weeks : int
+        Number of weeks to simulate.
+    population : int
+        Total population size used to convert population fractions into
+        absolute numbers of infections.
+    b : float
+        Natural birth and death rate of the model.
 
     Returns
     -------
-    np.ndarray
-        Array of shape (n_weeks, n_variants) with weekly symptomatic cases.
+    weekly_symptomatic_cases : np.ndarray
+        Array of shape ``(n_weeks, n_variants)`` containing modelled weekly
+        symptomatic case counts for every variant.
+
+    Raises
+    ------
+    ValueError
+        If parameter dimensions are inconsistent or parameter values violate
+        their allowed ranges.
+    RuntimeError
+        If numerical integration of the ODE system fails.
     """
     beta = np.asarray(beta, dtype=float)
     gamma = np.asarray(gamma, dtype=float)
@@ -318,9 +409,7 @@ def run_model_weekly_cases(
     return np.maximum(weekly_symptomatic_cases, 0.0)
 
 
-# =============================================================================
-# Sequential objective function and optimisation
-# =============================================================================
+# Sequential objective function and optimization
 
 
 def objective_active_variants(
@@ -338,18 +427,63 @@ def objective_active_variants(
     reported_cases: np.ndarray,
 ) -> float:
     """
-    Calculate the sum of squared log-scale residuals for one fitting stage.
+    Computes the sum of squared log-scale residuals for one sequential fitting
+    stage.
 
-    Parameter order
-    ---------------
-    - beta for active variants
-    - gamma for active variants
-    - log10(infectious_at_start) for active variants
-    - antibody_effectiveness for active variants
-    - shared symptomatic_rate
+    The parameter vector is interpreted in the following order:
 
-    Parameters for inactive variants remain fixed. Their initial infectious
-    fractions should normally be zero until their corresponding stage starts.
+    1. Transmission rates ``beta`` of active variants.
+    2. Recovery rates ``gamma`` of active variants.
+    3. Base-10 logarithms of the initial infectious fractions of active
+       variants.
+    4. Antibody effectiveness values of active variants.
+    5. One shared symptomatic rate.
+
+    Parameters of inactive variants remain fixed at their supplied initial
+    values.
+
+    Parameters
+    ----------
+    params : np.ndarray
+        Flat optimization parameter vector containing the parameters of active
+        variants and the shared symptomatic rate.
+    active_variant_indices : list of int
+        Indices of the variants whose parameters are optimized in the current
+        fitting stage.
+    beta_initial : np.ndarray
+        Full vector of baseline transmission rates. Entries of inactive
+        variants remain unchanged.
+    gamma_initial : np.ndarray
+        Full vector of baseline recovery rates. Entries of inactive variants
+        remain unchanged.
+    infectious_initial : np.ndarray
+        Full vector of baseline initial infectious fractions. Entries of
+        inactive variants remain unchanged.
+    antibody_effectiveness_initial : np.ndarray
+        Full vector of baseline antibody effectiveness values. Entries of
+        inactive variants remain unchanged.
+    sigma_fixed : np.ndarray
+        Fixed cross-immunity matrix used for all model evaluations.
+    fraction_antibodies : float
+        Fraction of the population with antibodies at the start of the
+        simulation.
+    n_weeks : int
+        Number of weeks for which the model is simulated.
+    population : int
+        Total population size used to convert modelled fractions into case
+        counts.
+    b : float
+        Natural birth and death rate of the model.
+    reported_cases : np.ndarray
+        Observed weekly strain-specific case estimates. Columns must correspond
+        to the variant ordering used by the model.
+
+    Returns
+    -------
+    float
+        Sum of squared residuals between ``log1p``-transformed modelled and
+        observed cases. Returns ``1e12`` if model evaluation fails or produces
+        non-finite values.
     """
     n_active = len(active_variant_indices)
 
@@ -435,20 +569,70 @@ def fit_stage(
     stage_name: str,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, float]:
     """
-    Fit one sequential stage.
+    Fits the parameters of active variants in one sequential optimization stage.
+
+    The Nelder-Mead optimizer minimizes the log-scale sum of squared residuals
+    returned by ``objective_active_variants``. Parameters and initial values of
+    inactive variants remain fixed.
+
+    Parameters
+    ----------
+    active_variant_indices : list of int
+        Indices of variants whose parameters are fitted in this stage.
+    beta_start : np.ndarray
+        Initial optimization values for transmission rates of active variants.
+    gamma_start : np.ndarray
+        Initial optimization values for recovery rates of active variants.
+    infectious_start : np.ndarray
+        Initial optimization values for infectious fractions of active
+        variants.
+    antibody_effectiveness_start : np.ndarray
+        Initial optimization values for antibody effectiveness of active
+        variants.
+    symptomatic_rate_start : float
+        Initial optimization value for the shared symptomatic rate.
+    beta_initial : np.ndarray
+        Full vector of transmission rates used as fixed values for inactive
+        variants.
+    gamma_initial : np.ndarray
+        Full vector of recovery rates used as fixed values for inactive
+        variants.
+    infectious_initial : np.ndarray
+        Full vector of initial infectious fractions used as fixed values for
+        inactive variants.
+    antibody_effectiveness_initial : np.ndarray
+        Full vector of antibody effectiveness values used as fixed values for
+        inactive variants.
+    sigma_fixed : np.ndarray
+        Fixed cross-immunity matrix.
+    fraction_antibodies : float
+        Fraction of the population with antibodies at the start of the
+        simulation.
+    n_weeks : int
+        Number of weeks in the fitting period.
+    population : int
+        Total population size.
+    b : float
+        Natural birth and death rate of the model.
+    reported_cases : np.ndarray
+        Observed weekly strain-specific case estimates.
+    variants : list of str
+        Variant names used when printing fitted parameter values.
+    stage_name : str
+        Descriptive name of the current optimization stage.
 
     Returns
     -------
     beta_opt : np.ndarray
-        Fitted beta values for active variants.
+        Fitted transmission rates for active variants.
     gamma_opt : np.ndarray
-        Fitted gamma values for active variants.
+        Fitted recovery rates for active variants.
     infectious_opt : np.ndarray
         Fitted initial infectious fractions for active variants.
     antibody_effectiveness_opt : np.ndarray
         Fitted antibody effectiveness values for active variants.
     symptomatic_rate_opt : float
-        Shared fitted symptomatic rate.
+        Fitted symptomatic rate shared by all active variants.
     """
     n_active = len(active_variant_indices)
 
@@ -507,8 +691,8 @@ def fit_stage(
         bounds=bounds,
         options={
             "maxiter": maxiter,
-            "xatol": optimisation_tolerance,
-            "fatol": optimisation_tolerance,
+            "xatol": optimization_tolerance,
+            "fatol": optimization_tolerance,
             "disp": True,
         },
     )
@@ -551,9 +735,7 @@ def fit_stage(
     )
 
 
-# =============================================================================
-# Output functions
-# =============================================================================
+### Output functions
 
 
 def plot_model_fit(
@@ -565,10 +747,32 @@ def plot_model_fit(
     filename: str | Path,
 ) -> None:
     """
-    Plot all observed and fitted weekly influenza cases in one figure.
+    Plots observed and fitted weekly influenza cases for all variants.
 
-    Points represent estimated strain-specific cases. Lines represent the
-    multi-variant model using either newly fitted or saved parameters.
+    Points represent observed strain-specific case estimates and lines
+    represent case counts produced by the fitted multi-variant model.
+
+    Parameters
+    ----------
+    dates : pd.DatetimeIndex
+        Dates corresponding to the weekly observations and model outputs.
+    reported_cases : np.ndarray
+        Observed weekly case estimates of shape ``(n_weeks, n_variants)``.
+    fitted_cases : np.ndarray
+        Modelled weekly symptomatic case estimates of shape
+        ``(n_weeks, n_variants)``.
+    variants : list of str
+        Names of the influenza variants in the column order of the case
+        arrays.
+    colors : list of str
+        Matplotlib color specifications, with one entry per variant.
+    filename : str or pathlib.Path
+        Output filename without or with extension. The extension is replaced
+        by the globally configured ``fileformat``.
+
+    Returns
+    -------
+    None.
     """
     fig = plt.figure()
 
@@ -634,7 +838,37 @@ def save_fitted_parameters(
     sigma: np.ndarray,
     symptomatic_rate: float,
 ) -> None:
-    """Save fitted and fixed parameters to a CSV file."""
+    """
+    Saves fitted and fixed influenza model parameters to a CSV file.
+
+    The output contains one row per variant. Shared parameters, including the
+    symptomatic rate and cross-immunity values, are repeated in every row.
+
+    Parameters
+    ----------
+    filename : str or pathlib.Path
+        Path of the CSV file to create. Parent directories are created if
+        necessary.
+    variants : list of str
+        Names of variants in the ordering used by all parameter arrays.
+    beta : np.ndarray
+        Fitted transmission rates, with one entry per variant.
+    gamma : np.ndarray
+        Fitted recovery rates, with one entry per variant.
+    infectious_at_start : np.ndarray
+        Fitted initial infectious fractions, with one entry per variant.
+    antibody_effectiveness : np.ndarray
+        Fitted antibody effectiveness values, with one entry per variant.
+    sigma : np.ndarray
+        Cross-immunity matrix of shape ``(n_variants, n_variants)``.
+    symptomatic_rate : float
+        Shared fitted proportion of infections interpreted as symptomatic
+        cases.
+
+    Returns
+    -------
+    None.
+    """
     filename = Path(filename)
     filename.parent.mkdir(parents=True, exist_ok=True)
 
@@ -695,7 +929,32 @@ def save_weekly_cases(
     reported_cases: np.ndarray,
     fitted_cases: np.ndarray,
 ) -> None:
-    """Save observed and fitted weekly strain-specific influenza cases."""
+    """
+    Saves observed and modelled weekly strain-specific influenza cases to a
+    CSV file.
+
+    Parameters
+    ----------
+    filename : str or pathlib.Path
+        Path of the CSV file to create. Parent directories are created if
+        necessary.
+    weekly_data : pd.DataFrame
+        Filtered input data containing at least the columns ``year``, ``week``,
+        ``calendar_week``, ``date``, and ``estimated_cases``.
+    variants : list of str
+        Names of variants in the column order of the observed and modelled
+        case arrays.
+    reported_cases : np.ndarray
+        Observed weekly strain-specific case estimates of shape
+        ``(n_weeks, n_variants)``.
+    fitted_cases : np.ndarray
+        Modelled weekly strain-specific case estimates of shape
+        ``(n_weeks, n_variants)``.
+
+    Returns
+    -------
+    None.
+    """
     filename = Path(filename)
     filename.parent.mkdir(parents=True, exist_ok=True)
 
@@ -727,6 +986,9 @@ def save_weekly_cases(
     )
 
 
+### Read precomputed parameters
+
+
 def read_fitted_parameters(
     filename: str | Path,
     variants: list[str],
@@ -739,22 +1001,44 @@ def read_fitted_parameters(
     float,
 ]:
     """
-    Read previously fitted influenza parameters from a CSV file.
+    Reads previously fitted influenza model parameters from a CSV file.
+
+    The file must have been created by ``save_fitted_parameters`` and must
+    contain one row for every requested variant. The stored symptomatic rate
+    must be identical for all rows.
+
+    Parameters
+    ----------
+    filename : str or pathlib.Path
+        Path to the CSV file containing fitted parameters.
+    variants : list of str
+        Variant names and desired ordering of the returned parameter arrays.
 
     Returns
     -------
     beta : np.ndarray
-        Fitted transmission rates.
+        Fitted transmission rates in the order specified by ``variants``.
     gamma : np.ndarray
-        Fitted recovery rates.
+        Fitted recovery rates in the order specified by ``variants``.
     infectious_at_start : np.ndarray
-        Fitted initial infectious fractions.
+        Fitted initial infectious fractions in the order specified by
+        ``variants``.
     antibody_effectiveness : np.ndarray
-        Fitted antibody effectiveness values.
+        Fitted antibody effectiveness values in the order specified by
+        ``variants``.
     sigma : np.ndarray
-        Cross-immunity matrix stored in the parameter file.
+        Symmetric cross-immunity matrix reconstructed from the stored
+        upper-triangular values.
     symptomatic_rate : float
         Shared fitted symptomatic rate.
+
+    Raises
+    ------
+    FileNotFoundError
+        If ``filename`` does not exist.
+    ValueError
+        If required columns or requested variants are missing, or if the
+        symptomatic rate differs between variants in the parameter file.
     """
     filename = Path(filename)
 
@@ -849,10 +1133,7 @@ def read_fitted_parameters(
     )
 
 
-# =============================================================================
 # Plot and output configuration
-# =============================================================================
-
 input_folder = Path("../../Influenza Case Estimation/data")
 data_folder = Path("../data")
 plot_folder = Path("../plots")
@@ -872,10 +1153,7 @@ colors = [
 ]
 
 
-# =============================================================================
-# Model and optimisation configuration
-# =============================================================================
-
+# Model and optimization configuration
 flu_season = "2017-2018"
 fit_period = "november_to_may"
 recompute = False
@@ -905,35 +1183,24 @@ final_plot_filename = (
 )
 
 population = 325_000_000
-
-# Daily natural birth/death rate.
 b = 2.4e-5
-
-# Fraction with pre-season influenza antibodies.
 fraction_antibodies = 1.0
 
 # Parameter bounds.
 minimum_beta = 0.05
 maximum_beta = 5.00
-
-# Infectious duration from 1 to 7 days.
 minimum_gamma = 1.0 / 7.0
 maximum_gamma = 1.0 / 1.0
-
 minimum_log10_infectious_at_start = -12.0
 maximum_log10_infectious_at_start = -3.0
-
-# A value slightly above zero avoids numerical problems in
-# create_initial_conditions_from_seroprevalence at exactly zero protection.
 minimum_antibody_effectiveness = 1e-6
 maximum_antibody_effectiveness = 1.0
-
 minimum_symptomatic_rate = 0.01
 maximum_symptomatic_rate = 1.0
 
 # Nelder-Mead settings.
 maxiter = 50_000
-optimisation_tolerance = 1e-7
+optimization_tolerance = 1e-7
 
 # Initial parameter values.
 beta_initial = np.array(
@@ -945,7 +1212,6 @@ beta_initial = np.array(
     ],
     dtype=float,
 )
-
 gamma_initial = np.array(
     [
         1.0 / 4.0,
@@ -955,10 +1221,6 @@ gamma_initial = np.array(
     ],
     dtype=float,
 )
-
-# Only variants active in the current fitting stage receive a non-zero seed.
-# The sequential procedure inserts and estimates each seed when its variant
-# becomes active.
 infectious_initial = np.array(
     [
         1e-7,  # A(H1N1)
@@ -968,7 +1230,6 @@ infectious_initial = np.array(
     ],
     dtype=float,
 )
-
 antibody_effectiveness_initial = np.array(
     [
         0.62,  # A(H1N1)
@@ -978,7 +1239,6 @@ antibody_effectiveness_initial = np.array(
     ],
     dtype=float,
 )
-
 symptomatic_rate_initial = 0.50
 
 # Fixed symmetric cross-immunity values.
@@ -990,8 +1250,6 @@ symptomatic_rate_initial = 0.50
 # sigma_23 = A(H3) <-> B/Victoria
 # sigma_24 = A(H3) <-> B/Yamagata
 # sigma_34 = B/Victoria <-> B/Yamagata
-#
-# Replace these values with literature-derived or separately estimated values.
 sigma_upper_fixed = np.array(
     [
         0.20,
@@ -1003,19 +1261,14 @@ sigma_upper_fixed = np.array(
     ],
     dtype=float,
 )
-
 n_variants = len(variants)
-
 sigma_fixed = params_to_sigma(
     sigma_upper_fixed,
     n_variants,
 )
 
 
-# =============================================================================
 # Read influenza data
-# =============================================================================
-
 weekly_data = read_and_filter_weekly_cases(
     filename=input_file,
     variants=variants,
@@ -1043,10 +1296,7 @@ if recompute:
     print(sigma_fixed)
     print()
 
-    # =============================================================================
     # Stage 1: Fit A(H1N1)
-    # =============================================================================
-
     (
         beta_stage_1,
         gamma_stage_1,
@@ -1081,10 +1331,7 @@ if recompute:
         stage_name="Stage 1: A(H1N1)",
     )
 
-    # =============================================================================
     # Stage 2: Re-fit A(H1N1) and fit A(H3)
-    # =============================================================================
-
     (
         beta_stage_2,
         gamma_stage_2,
@@ -1139,10 +1386,7 @@ if recompute:
         stage_name="Stage 2: A(H1N1) + A(H3)",
     )
 
-    # =============================================================================
     # Stage 3: Re-fit A(H1N1), A(H3), and fit B/Victoria
-    # =============================================================================
-
     (
         beta_stage_3,
         gamma_stage_3,
@@ -1201,10 +1445,7 @@ if recompute:
         stage_name="Stage 3: A(H1N1) + A(H3) + B/Victoria",
     )
 
-    # =============================================================================
     # Stage 4: Re-fit all variants including B/Yamagata
-    # =============================================================================
-
     (
         beta_final,
         gamma_final,
@@ -1269,7 +1510,7 @@ if recompute:
 
 else:
     print(
-        "Loading saved fitted parameters without re-optimisation: "
+        "Loading saved fitted parameters without re-optimization: "
         f"{fitted_parameters_filename}"
     )
 
@@ -1290,10 +1531,7 @@ else:
     print(sigma_final)
 
 
-# =============================================================================
 # Print final estimates
-# =============================================================================
-
 print()
 print("=" * 80)
 print("Final fitted influenza parameters")
@@ -1326,10 +1564,7 @@ print("Fixed sigma matrix:")
 print(sigma_fixed)
 
 
-# =============================================================================
 # Final model run
-# =============================================================================
-
 fitted_cases_final = run_model_weekly_cases(
     beta=beta_final,
     gamma=gamma_final,
@@ -1351,10 +1586,7 @@ if len(fitted_cases_final) != len(reported_cases):
     )
 
 
-# =============================================================================
 # Plot and save outputs
-# =============================================================================
-
 plot_model_fit(
     dates=dates,
     reported_cases=reported_cases,

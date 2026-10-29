@@ -14,47 +14,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.integrate import solve_ivp
 from scipy.optimize import root
-import sympy as sp
 
 from cross_immunity_model import (
     basic_reproduction_number,
     check_validity,
+    eigenvalues_linearized_system,
     endemic_equilibrium_equation,
     invasion_reproduction_number,
     random_simplex_points,
+    sample_random_parameters,
     two_variant_model,
     x_bar,
 )
-
-
-def sample_parameters(rng: np.random.Generator) -> dict:
-    """
-    Sample random parameters for the model.
-
-    Parameters
-    ----------
-    rng : np.random.Generator
-        Random number generator.
-
-    Returns
-    -------
-    dict
-        Dictionary of model parameters.
-    """
-    sigma = rng.uniform(0.0, 1.0)
-    beta1 = rng.uniform(0.1, 2.0)
-    beta2 = rng.uniform(0.1, 2.0)
-    gamma1 = rng.uniform(0.1, beta1)
-    gamma2 = rng.uniform(0.1, beta2)
-    b = rng.uniform(0.01, 0.1)
-    return dict(
-        sigma=sigma,
-        beta1=beta1,
-        beta2=beta2,
-        gamma1=gamma1,
-        gamma2=gamma2,
-        b=b,
-    )
 
 
 def check_initial_values(
@@ -161,13 +132,19 @@ def check_initial_values(
 
 
 def check_parameter_sets(
+    beta_mean: float,
+    beta_std: float,
+    gamma_mean: float,
+    gamma_std: float,
+    sigma_alpha: float,
+    sigma_beta: float,
+    b_val: float,
     N_target_sets: int = 100,
     N_initial_values: int = 10,
     tf: float = 5000,
     threshold_r0: float = 1.0,
     filename: str | None = None,
     verbose: bool = False,
-    seed: int = 42,
     dpi: int = 500,
 ) -> None:
     """
@@ -175,6 +152,20 @@ def check_parameter_sets(
 
     Parameters
     ----------
+    beta_mean : float
+        Mean of normal distribution for beta.
+    beta_std : float
+        Standard deviation of normal distribution for beta.
+    gamma_mean : float
+        Mean of normal distribution for gamma.
+    gamma_std : float
+        Standard deviation of normal distribution for gamma.
+    sigma_alpha : float
+        Shape parameter alpha of beta distribution for sigma.
+    sigma_beta : float
+        Shape parameter beta of beta distribution for sigma.
+    b_val : float
+        Numerical value of birth and death rate.
     N_target_sets : int, optional
         Number of parameter sets to check. The default is 100.
     N_initial_values : int, optional
@@ -189,8 +180,6 @@ def check_parameter_sets(
         The default is None.
     verbose : bool, optional
         Verbose mode. The default is False.
-    seed : int, optional
-        Seed of random number generator. The default is 42.
     dpi : int, optional
         Dots per inch for saving plots. The default is 500.
 
@@ -199,39 +188,32 @@ def check_parameter_sets(
     None.
     """
     # Initialize variables
-    rng = np.random.default_rng(seed=seed)
     valid_stats = []
-
-    x1, x2, x3, x4, x5, x6, x7, x8, x9 = sp.symbols(
-        "x1 x2 x3 x4 x5 x6 x7 x8 x9"
-    )
-    xs = [x1, x2, x3, x4, x5, x6, x7, x8, x9]
-    gamma1, gamma2, beta1, beta2, sigma, b = sp.symbols(
-        "gamma1 gamma2 beta1 beta2 sigma b", positive=True
-    )
-
-    # Linearize the model symbolically
-    F = two_variant_model(0, xs, beta1, beta2, gamma1, gamma2, sigma, b)
-    J = sp.Matrix(F).jacobian(xs)
-
     cycles = 0
+
     while len(valid_stats) < N_target_sets:
         # Sample random parameters for the model
         rng = np.random.default_rng(seed=cycles)
         cycles += 1
-        params = sample_parameters(rng)
-        beta_1 = params["beta1"]
-        beta_2 = params["beta2"]
-        gamma_1 = params["gamma1"]
-        gamma_2 = params["gamma2"]
-        sigma_val = params["sigma"]
-        b_val = params["b"]
+        beta, gamma, sigma_matrix = sample_random_parameters(
+            2,
+            beta_mean,
+            beta_std,
+            gamma_mean,
+            gamma_std,
+            sigma_alpha,
+            sigma_beta,
+            rng,
+        )
+        beta_1 = beta[0]
+        beta_2 = beta[1]
+        gamma_1 = gamma[0]
+        gamma_2 = gamma[1]
+        sigma_val = sigma_matrix[0, 1]
 
         # Compute (invasion) reproduction numbers and check if both are greater
         # than 1
-        r_01, r_02 = basic_reproduction_number(
-            [beta_1, beta_2], [gamma_1, gamma_2], b_val
-        )
+        r_01, r_02 = basic_reproduction_number(beta, gamma, b_val)
         r_021 = invasion_reproduction_number(r_01, r_02, sigma_val)
         r_012 = invasion_reproduction_number(r_02, r_01, sigma_val)
         if not (r_012 > threshold_r0 and r_021 > threshold_r0):
@@ -250,30 +232,13 @@ def check_parameter_sets(
         x_star = np.array(
             x_bar(sol.x, beta_1, beta_2, gamma_1, gamma_2, sigma_val, b_val)
         )
+        x_eq = x_star[[5, 6, 0, 7, 3, 8, 1, 4, 2]]
 
-        # Replace the symbolic variables by its numerical values and compute
-        # the maximal real part of the eigenvalues of the linearized system
-        x_star_dict = {
-            x1: x_star[0],
-            x2: x_star[1],
-            x3: x_star[2],
-            x4: x_star[3],
-            x5: x_star[4],
-            x6: x_star[5],
-            x7: x_star[6],
-            x8: x_star[7],
-            x9: x_star[8],
-            b: b_val,
-            beta1: beta_1,
-            beta2: beta_2,
-            gamma1: gamma_1,
-            gamma2: gamma_2,
-            sigma: sigma_val,
-        }
-        J_num = J.subs(x_star_dict)
-        J_num = np.array(J_num.evalf().tolist(), dtype=float)
-        eigvals = np.linalg.eigvals(J_num)
-        max_real_part = np.max(eigvals.real)
+        # Compute the maximal real part of the eigenvalues of the linearized
+        # system
+        _, max_real_part, _ = eigenvalues_linearized_system(
+            x_eq, beta, gamma, sigma_matrix, b_val
+        )
 
         # Create list of random initial values
         x0_list = random_simplex_points(N_initial_values, dim=9, rng=rng)
@@ -305,7 +270,7 @@ def check_parameter_sets(
         # Store statistics in a dictionary
         stats = {
             "set": len(valid_stats),
-            "params": params,
+            "params": [beta, gamma, sigma_val, b_val],
             "mean_dist": dist_to_xstar.mean(),
             "std_dist": dist_to_xstar.std(),
             "max_dist": dist_to_xstar.max(),
@@ -432,20 +397,32 @@ check_initial_values(
 
 ### STEP 2: Check for multiple parameter sets and initial values
 
+beta_mean = 0.3
+beta_std = 0.025
+gamma_mean = 0.1
+gamma_std = 0
+sigma_alpha = 9
+sigma_beta = 1
+b = 0.01
 N_target_sets = 1000
 N_initial_values = 100
 threshold_r0 = 1
-filename = f"{folder}/different_parameters"
-tf = 5000
-seed = 42
+filename = f"{folder}/different_parameters_new"
+tf = 20000
 
 check_parameter_sets(
+    beta_mean,
+    beta_std,
+    gamma_mean,
+    gamma_std,
+    sigma_alpha,
+    sigma_beta,
+    b,
     N_target_sets=N_target_sets,
     N_initial_values=N_initial_values,
     threshold_r0=threshold_r0,
     filename=filename,
     tf=tf,
     verbose=True,
-    seed=seed,
     dpi=dpi,
 )
