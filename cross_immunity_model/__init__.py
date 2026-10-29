@@ -1,3 +1,11 @@
+"""
+Provides a multi-variant epidemiological model with cross-immunity.
+
+The package contains functions for constructing and simulating multi-variant
+cross-immunity models, computing equilibria and invasion reproduction numbers,
+generating initial conditions, and transforming model states and case data.
+"""
+
 from .case_transformations import (
     cases_to_incidence,
     cumulative_cases_to_incidence,

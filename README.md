@@ -11,11 +11,14 @@ A generic multi-variant SIR-like model for infectious diseases with partial cros
 This package implements a mathematical framework for modelling the dynamics of multiple
 co-circulating infectious disease variants with partial cross-immunity. It provides:
 
-- A general **multi-variant model** formulated in both naive (for-loops) and efficient
-  matrix-vector formulations
+- A general **multi-variant model** formulated with naive for-loops, dense
+  matrix-vector operations, precomputed dense matrices, and sparse operators
 - Tools for computing **endemic equilibria** and their **stability**
 - Analysis of **invasion reproduction numbers** and invasion conditions
 - Utilities for **initial condition creation** from seroprevalence data
+- Utilities for transforming cumulative case data into daily cases and incidence
+- Sequential parameter-identification workflows for variant-specific COVID-19
+  incidence data and strain-specific influenza case estimates
 - Symbolic computation tools for analytical results
 
 ## Installation
@@ -33,6 +36,7 @@ pip install -e ".[dev]"
 - numpy >= 1.20.0
 - scipy >= 1.7.0
 - matplotlib >= 3.5.0
+- pandas >= 1.3.0
 - sympy >= 1.9.0
 
 ## Model Description
@@ -56,17 +60,17 @@ obtained by flattening the upper triangular part of `I`.
 
 ```
 cross_immunity_model/
-├── multi_variant_model.py                    # Core model ODEs (3 formulations)
+├── multi_variant_model.py                    # Core ODEs: loop, dense, and sparse formulations
 ├── two_variant_model.py                      # Explicit two-variant model
-├── matrices.py                               # Matrix construction (V, G, T, S)
+├── matrices.py                               # Dense and sparse model-operator construction
 ├── model_transformations.py                  # State transformations and projections
-├── multi_variant_equilibrium_equations.py    # Equilibrium computation & stability
+├── multi_variant_equilibrium_equations.py    # Equilibrium computation and stability analysis
 ├── two_variant_equilibrium_equations.py      # Two-variant equilibrium equations
 ├── invasion_reproduction_number.py           # Invasion analysis
 ├── create_initial_conditions.py              # Initial conditions from seroprevalence
 ├── random_parameters.py                      # Random parameter generation
-├── symbolic_system.py                        # Symbolic model & Jacobian
-├── case_transformations.py                   # Case count utilities
+├── symbolic_system.py                        # Symbolic model and Jacobian
+├── case_transformations.py                   # Case-count and incidence utilities
 └── utils.py                                  # General utility functions
 ```
 
@@ -115,6 +119,32 @@ sol = solve_ivp(
     args=(beta, gamma, sigma, V, G, T, S, b)
 )
 ```
+
+### Using Sparse Operators
+
+For larger numbers of variants, the sparse formulation avoids storing dense
+transition matrices.
+
+```python
+from scipy.integrate import solve_ivp
+from cross_immunity_model import (
+    construct_sparse_operators,
+    multi_variant_model_sparse,
+)
+
+operators = construct_sparse_operators(gamma, sigma)
+
+sol = solve_ivp(
+    multi_variant_model_sparse,
+    (0, 500),
+    x0,
+    args=(beta, operators, b),
+)
+```
+
+The sparse operators contain the recovery rates and cross-immunity transition
+matrices. Therefore, `gamma` and `sigma` must remain fixed during integration.
+
 
 ### Computing the Invasion Reproduction Number
 
@@ -191,22 +221,22 @@ incidence = cumulative_cases_to_incidence(cumulative_cases, population, window=7
 
 | Script | Description |
 |--------|-------------|
-| `comparison_independent_transmission.py` | Comparison of a model with and without co-infection |
-| `endemic_equilibrium_sensitivity.py` | Sensitivity of equilibrium w.r.t. parameters |
-| `example_multi_variant_equilibrium.py` | Computing and analysing equilibria of a 3-variant model |
-| `example_multi_variant_model.py` | Simulate 2-variant systems |
-| `example_multi_variant_models.py` | Simulating 1-, 2-, and 3-variant systems |
+| `comparison_independent_transmission.py` | Comparison of models with and without co-infection |
+| `endemic_equilibrium_sensitivity.py` | Sensitivity analysis of the two-variant endemic equilibrium |
+| `example_multi_variant_model.py` | Simulation of a two-variant system |
+| `example_stable_equilibrium_without_most_transmissible_variant.py` | Example of a stable three-variant equilibrium excluding the most transmissible variant |
+| `final_size_two_variants.py` | Final epidemic-size sweeps over cross-immunity, transmission, and recovery rates |
 | `invasion_ability_third_variant.py` | Invasion analysis for a third variant |
-| `linearized_two_variant_model.py` | Symbolic linearization of the two-variant model |
-| `non_transitivity_example.py` | Non-transitivity of invasion ability |
-| `numerical_stability_multiple_variants.py` | Numerical stability checks for n-variant models |
+| `non_transitivity_example.py` | Demonstration that invasion ability is not transitive |
+| `numerical_stability_multiple_variants.py` | Numerical stability checks for multi-variant equilibria |
 | `numerical_stability_two_variants.py` | Numerical stability checks for the two-variant model |
-| `plot_invasion_reproduction_number.py` | Visualising invasion regions and critical values |
-| `proof_two_variant_equilibrium.py` | Proof: at most 4 feasible equilibria in the two-variant model |
-| `runtime_model_formulations.py` | Runtime comparison of model formulations |
-| `runtime_stable_equilibrium.py` | Runtime and accuracy comparison of different algorithms |
-| `sensitivity_equilibrium_formulations.py` | Sensitivity analysis of equilibrium formulations |
-| `symbolic_computation_reproduction_number.py` | Symbolic computation of invasion reproduction numbers |
+| `parameter_identification_covid.py` | Sequential fit to Delta, Omicron BA.1, and Omicron BA.2 incidence data |
+| `parameter_identification_influenza.py` | Sequential fit to strain-specific influenza case estimates |
+| `plot_invasion_reproduction_number.py` | Visualisation of invasion regions and critical values |
+| `proof_two_variant_equilibrium.py` | Symbolic investigation of the number of feasible two-variant equilibria |
+| `runtime_model_formulations.py` | Runtime comparison of loop, dense, precomputed, and sparse ODE formulations |
+| `runtime_stable_equilibrium.py` | Runtime and accuracy comparison of equilibrium-search methods |
+| `symbolic_computation_reproduction_number.py` | Symbolic computation of transmission-matrix eigenvalues and invasion quantities |
 
 ## API Reference
 
@@ -214,19 +244,22 @@ incidence = cumulative_cases_to_incidence(cumulative_cases, population, window=7
 
 | Function | Description |
 |----------|-------------|
-| `multi_variant_model` | ODE right-hand side (matrix-vector formulation) |
-| `multi_variant_model_for_loops` | ODE right-hand side (naive for-loop formulation) |
-| `multi_variant_model_with_matrices` | ODE right-hand side (precomputed matrices) |
+| `multi_variant_model` | ODE right-hand side with dense matrices constructed during each evaluation |
+| `multi_variant_model_for_loops` | ODE right-hand side using naive for-loop formulation |
+| `multi_variant_model_with_matrices` | ODE right-hand side using precomputed dense matrices |
+| `multi_variant_model_sparse` | ODE right-hand side using precomputed sparse operators |
 | `two_variant_model` | Explicit two-variant ODE with demographics |
 
 ### Matrix Construction
 
 | Function | Description |
 |----------|-------------|
-| `construct_matrices` | Construct all matrices (V, G, T, S) |
+| `construct_matrices` | Construct all dense matrices (V, G, T, S) |
+| `construct_sparse_operators` | Construct sparse transition operators for the sparse model formulation |
+| `SparseModelOperators` | Container holding sparse transition matrices and associated indices |
 | `variant_in_set_matrix` | Variant-in-set matrix V |
 | `compute_gamma_matrix` | Recovery matrix G |
-| `construct_transition_matrix` | Cross-immunity transition matrix T |
+| `construct_transition_matrix` | Dense cross-immunity transition matrix T |
 | `shift_matrix` | Shift matrix S |
 
 ### State Transformations
@@ -316,11 +349,33 @@ incidence = cumulative_cases_to_incidence(cumulative_cases, population, window=7
 | `subsets_of` | Return all subsets of a given index set |
 | `variant_in_set` | Check whether variant k is in set i |
 
+## Documentation
+
+The API documentation is generated automatically from the NumPy-style
+docstrings using Sphinx. It includes the public package modules.
+
+From the project root, generate the API pages and build the HTML documentation:
+
+```powershell
+sphinx-apidoc --force --separate --module-first `
+    -o docs/source/api `
+    cross_immunity_model
+
+python -m sphinx -b html docs/source docs/build/html
+```
+
+Open the generated documentation with:
+
+```powershell
+Start-Process docs/build/html/index.html
+```
+
 ## Citation
 
 If you use this software in your research, please cite:
 [Citation will be added upon publication]
-
+For a mathematical analysis of the underlying model, see:
+[Citation will be added upon publication]
 
 ## License
 
@@ -330,4 +385,5 @@ tba
 
 Marvin Schulte - [marvin.schulte@itwm.fraunhofer.de](mailto:marvin.schulte@itwm.fraunhofer.de)
 
-Fraunhofer Institute for Industrial Mathematics ITWM
+Division Processes and Materials, Department Flow Processes, Fraunhofer Institute for Industrial Mathematics ITWM
+Department of Mathematics, RPTU University of Kaiserslautern-Landau
