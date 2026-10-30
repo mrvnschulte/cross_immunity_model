@@ -2,6 +2,9 @@
 [![codecov](https://codecov.io/gh/mrvnschulte/cross_immunity_model/branch/master/graph/badge.svg)](https://codecov.io/gh/mrvnschulte/cross_immunity_model)
 [![Documentation](https://img.shields.io/badge/documentation-GitHub%20Pages-blue)](https://mrvnschulte.github.io/REPOSITORY-NAME/)
 
+<p align="center">
+  <img src="docs/source/_static/logo.png" alt="Cross Immunity Model logo" width="180">
+</p>
 
 # Cross Immunity Model
 
