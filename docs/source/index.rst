@@ -7,5 +7,5 @@ API documentation for the ``cross_immunity_model`` package.
    :maxdepth: 3
    :caption: Contents:
 
-   api/index
+   api_reference
    license

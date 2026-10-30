@@ -45,6 +45,7 @@ jobs:
             --force \
             --separate \
             --module-first \
+            --no-toc \
             --output-dir docs/source/api \
             cross_immunity_model \
             cross_immunity_model/__pycache__ \
