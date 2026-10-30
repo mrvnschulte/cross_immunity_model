@@ -4,7 +4,7 @@
 
 # Cross Immunity Model
 
-A generic multi-variant SIR-like model for infectious diseases with partial cross-immunity.
+A general multi-variant SIR-like model for infectious diseases with partial cross-immunity.
 
 ## Overview
 
