@@ -26,8 +26,8 @@ co-circulating infectious disease variants with partial cross-immunity. It provi
 
 For development:
 ```bash
-git clone git@gitlab.itwm.fraunhofer.de:schulte/cross-immunity-model.git
-cd cross-immunity-model
+git clone git@github.com:mrvnschulte/cross_immunity_model.git
+cd cross_immunity_model
 pip install -e ".[dev]"
 ```
 
