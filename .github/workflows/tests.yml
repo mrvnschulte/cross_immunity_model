@@ -30,6 +30,13 @@ jobs:
           --cov-report=xml:coverage.xml
           --cov-report=term
 
+      - name: Send coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage.xml
+          fail_ci_if_error: true
+
+
       - name: Upload test and coverage reports
         if: always()
         uses: actions/upload-artifact@v4

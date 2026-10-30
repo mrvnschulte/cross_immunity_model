@@ -58,6 +58,9 @@ html_static_path = ["_static"]
 html_theme_options = {
     "fixed_sidebar": True,
     "sidebar_collapse": True,
+    "github_user": "mrvnschulte",
+    "github_repo": "cross_immunity_model",
+    "github_button": True,
 }
 html_sidebars = {
     "**": [

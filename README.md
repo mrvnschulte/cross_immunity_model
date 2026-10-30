@@ -1,5 +1,6 @@
-[![Tests](https://gitlab.itwm.fraunhofer.de/schulte/cross-immunity-model/badges/master/pipeline.svg?key_text=Tests&key_width=40)](https://gitlab.itwm.fraunhofer.de/schulte/cross-immunity-model/-/pipelines)
-[![Coverage](https://gitlab.itwm.fraunhofer.de/schulte/cross-immunity-model/badges/master/coverage.svg)](https://gitlab.itwm.fraunhofer.de/schulte/cross-immunity-model/-/commits/master)
+[![Tests](https://github.com/mrvnschulte/cross_immunity_model/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/mrvnschulte/cross_immunity_model/actions/workflows/tests.yml)
+[![codecov](https://codecov.io/gh/mrvnschulte/cross_immunity_model/branch/master/graph/badge.svg)](https://codecov.io/gh/mrvnschulte/cross_immunity_model)
+[![Documentation](https://img.shields.io/badge/documentation-GitHub%20Pages-blue)](https://mrvnschulte.github.io/REPOSITORY-NAME/)
 
 
 # Cross Immunity Model
@@ -38,6 +39,13 @@ pip install -e ".[dev]"
 - matplotlib >= 3.5.0
 - pandas >= 1.3.0
 - sympy >= 1.9.0
+
+## Documentation
+
+The API documentation is available at:
+
+[https://mrvnschulte.github.io/cross_immunity_model/](https://mrvnschulte.github.io/cross_immunity_model/)
+
 
 ## Model Description
 
