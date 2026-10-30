@@ -342,16 +342,16 @@ dpi = 1200
 fontsize_text = 20
 fontsize_ticks = 16
 alpha_grid = 0.7
-folder = "../plots_test"
+folder = "../plots"
 fileformat = "pdf"
-data_folder = "../data_test"
+data_folder = "../data"
 
 t0 = 0
 tf = 500
 n_repeats = 10
-n_variants_max = 4
+n_variants_max = 7
 # This benchmark only evaluates one RHS call and can therefore use more variants
-n_variants_max_function_call = 4
+n_variants_max_function_call = 10
 
 beta_mean = 0.3
 beta_std = 0.025
@@ -364,7 +364,7 @@ b = 0.01
 seed = 42
 verbose = True
 
-recompute = True
+recompute = False
 
 RUNTIME_VALUE_COLUMNS = (
     "min_loops_s",
