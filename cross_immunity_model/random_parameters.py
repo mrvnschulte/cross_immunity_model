@@ -48,6 +48,7 @@ def sample_random_parameters(
     sigma_beta: float = 1.0,
     rng: np.random.Generator = None,
     seed: int | None = None,
+    min_value: float = 1e-4,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Samples random parameters for cross immunity model with n variants.
@@ -81,6 +82,9 @@ def sample_random_parameters(
     seed : int | None, optional
         Seed of random number generator. Is only used, when no random number
         generator is passed. The default is None.
+    min_value : float, optional
+        Minimal value to which to set beta and gamma if they are smaller. The
+        default is 1e-4.
 
     Returns
     -------
@@ -93,8 +97,12 @@ def sample_random_parameters(
     """
     if rng is None:
         rng = np.random.default_rng(seed=seed)
-    beta = rng.normal(loc=beta_mean, scale=beta_std, size=n_variants)
-    gamma = rng.normal(loc=gamma_mean, scale=gamma_std, size=n_variants)
+    beta = np.maximum(
+        rng.normal(loc=beta_mean, scale=beta_std, size=n_variants), min_value
+    )
+    gamma = np.maximum(
+        rng.normal(loc=gamma_mean, scale=gamma_std, size=n_variants), min_value
+    )
     sigma = sample_symmetric_beta_matrix(
         n_variants, sigma_alpha, sigma_beta, rng
     )
