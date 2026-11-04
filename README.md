@@ -1,6 +1,6 @@
 [![Tests](https://github.com/mrvnschulte/cross_immunity_model/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/mrvnschulte/cross_immunity_model/actions/workflows/tests.yml)
 [![codecov](https://codecov.io/gh/mrvnschulte/cross_immunity_model/branch/master/graph/badge.svg)](https://codecov.io/gh/mrvnschulte/cross_immunity_model)
-[![Documentation](https://img.shields.io/badge/documentation-GitHub%20Pages-blue)](https://mrvnschulte.github.io/REPOSITORY-NAME/)
+[![Documentation](https://img.shields.io/badge/documentation-GitHub%20Pages-blue)](https://mrvnschulte.github.io/cross_immunity_model/)
 
 <p align="center">
   <img src="docs/source/_static/logo.png" alt="Cross Immunity Model logo" width="180">
