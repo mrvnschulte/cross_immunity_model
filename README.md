@@ -384,8 +384,11 @@ Start-Process docs/build/html/index.html
 ## Citation
 
 If you use this software in your research, please cite:
+
 [Citation will be added upon publication]
+
 For a mathematical analysis of the underlying model, see:
+
 [Citation will be added upon publication]
 
 ## License
@@ -396,5 +399,5 @@ This project is licensed under the [BSD 3-Clause License](LICENSE).
 
 Marvin Schulte - [marvin.schulte@itwm.fraunhofer.de](mailto:marvin.schulte@itwm.fraunhofer.de)
 
-Division Processes and Materials, Department Flow Processes, Fraunhofer Institute for Industrial Mathematics ITWM
+Department Flow Processes, Division Processes and Materials, Fraunhofer Institute for Industrial Mathematics ITWM
 Department of Mathematics, RPTU University of Kaiserslautern-Landau
