@@ -1,3 +1,4 @@
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23965257.svg)](https://doi.org/10.5281/zenodo.23965257)
 [![Tests](https://github.com/mrvnschulte/cross_immunity_model/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/mrvnschulte/cross_immunity_model/actions/workflows/tests.yml)
 [![codecov](https://codecov.io/gh/mrvnschulte/cross_immunity_model/branch/master/graph/badge.svg)](https://codecov.io/gh/mrvnschulte/cross_immunity_model)
 [![Documentation](https://img.shields.io/badge/documentation-GitHub%20Pages-blue)](https://mrvnschulte.github.io/cross_immunity_model/)
@@ -386,6 +387,8 @@ Start-Process docs/build/html/index.html
 If you use this software in your research, please cite:
 
 [Citation will be added upon publication]
+
+Schulte, M. (2026). *Cross Immunity Model: Version 1.0* (Version v1.0) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.23965257
 
 For a mathematical analysis of the underlying model, see:
 
