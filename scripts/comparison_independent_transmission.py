@@ -1,6 +1,6 @@
 """
-This script compares the two-variant model with co-infection with an otherwise
-equal model without the possibility of co-infection and plots both in one plot.
+This script compares the two-variant model with coinfection with an otherwise
+equal model without the possibility of coinfection and plots both in one plot.
 """
 
 import matplotlib.lines as mlines
@@ -23,7 +23,7 @@ def two_variant_model_without_coinfection(
     b: float = 0.0,
 ) -> list:
     """
-    Two-variant cross-immmunity model with demographics and no co-infection.
+    Two-variant cross-immmunity model with demographics and no coinfection.
 
     Parameters
     ----------
@@ -170,10 +170,10 @@ blue_line = mlines.Line2D([], [], color="tab:blue", label="strain 1")
 orange_line = mlines.Line2D([], [], color="tab:orange", label="strain 2")
 green_line = mlines.Line2D([], [], color="tab:green", label="both strains")
 solid_line = mlines.Line2D(
-    [], [], color="black", linestyle="-", label="with co-infection"
+    [], [], color="black", linestyle="-", label="with coinfection"
 )
 dashed_line = mlines.Line2D(
-    [], [], color="black", linestyle="--", label="without co-infection"
+    [], [], color="black", linestyle="--", label="without coinfection"
 )
 legend_infectious = fig.legend(
     handles=[blue_line, orange_line, green_line],
@@ -258,10 +258,10 @@ orange_line = mlines.Line2D([], [], color="tab:orange", label="strain 2")
 green_line = mlines.Line2D([], [], color="tab:green", label="both strains")
 red_line = mlines.Line2D([], [], color="tab:red", label="any strain")
 solid_line = mlines.Line2D(
-    [], [], color="black", linestyle="-", label="with co-infection"
+    [], [], color="black", linestyle="-", label="with coinfection"
 )
 dashed_line = mlines.Line2D(
-    [], [], color="black", linestyle="--", label="without co-infection"
+    [], [], color="black", linestyle="--", label="without coinfection"
 )
 legend_infectious = fig.legend(
     handles=[blue_line, orange_line, green_line, red_line],
